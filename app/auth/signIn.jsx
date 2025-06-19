@@ -1,18 +1,19 @@
-// auth/signIn.js
 import { useRouter } from 'expo-router';
 import { signInWithEmailAndPassword } from 'firebase/auth';
 import { useState } from 'react';
 import {
   Pressable,
   StyleSheet,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  View,
+  View
 } from 'react-native';
 import { auth } from '../../config/firebaseConfig';
-import Colors from '../../constant/Colors';
 import { useUser } from '../../context/UserDetailContext';
+import useTheme from '../../Theme/theme';
+
+import ThemedButton from '../../components/ThemedButton';
+import ThemedText from '../../components/ThemedText';
+import ThemedTextInput from '../../components/ThemedTextInput';
+import ThemedView from '../../components/ThemedView';
 
 export default function SignIn() {
   const [email, setEmail] = useState('');
@@ -20,10 +21,10 @@ export default function SignIn() {
   const [message, setMessage] = useState('');
   const [modalVisible, setModalVisible] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+
   const router = useRouter();
-  
-  // Get user context (optional - for additional functionality)
-  const { isAuthenticated } = useUser();
+  const theme = useTheme();
+  const { isAuthenticated } = useUser(); // optional
 
   const handleSignIn = async () => {
     if (!email || !password) {
@@ -37,17 +38,10 @@ export default function SignIn() {
       const userCredential = await signInWithEmailAndPassword(auth, email, password);
       const user = userCredential.user;
       console.log('✅ Signed in:', user.email);
-      
-      // Clear form
       setEmail('');
       setPassword('');
-      
-      // Navigate to home - the UserContext will automatically update
-      router.push('/homepage');
+      router.replace('/homepage'); // better UX
     } catch (error) {
-      console.error('❌ Sign-in error:', error.code, error.message);
-      
-      // Provide user-friendly error messages
       let errorMessage = error.message;
       if (error.code === 'auth/user-not-found') {
         errorMessage = 'No account found with this email address.';
@@ -58,7 +52,6 @@ export default function SignIn() {
       } else if (error.code === 'auth/too-many-requests') {
         errorMessage = 'Too many failed attempts. Please try again later.';
       }
-      
       setMessage(errorMessage);
       setModalVisible(true);
     } finally {
@@ -67,162 +60,130 @@ export default function SignIn() {
   };
 
   return (
-    <View style={styles.container}>
-      <Text style={styles.title}>Sign In</Text>
+    <ThemedView style={styles.container}>
+      <ThemedText style={[styles.title, { color: theme.primary }]}>Welcome Back</ThemedText>
+      <ThemedText style={styles.subtitle}>Please sign in to continue</ThemedText>
 
-      <TextInput
-        style={styles.input}
+      <ThemedTextInput
         placeholder="Email"
         value={email}
         onChangeText={setEmail}
         keyboardType="email-address"
         autoCapitalize="none"
         editable={!isLoading}
+        style={styles.input}
       />
 
-      <TextInput
-        style={styles.input}
+      <ThemedTextInput
         placeholder="Password"
         value={password}
         onChangeText={setPassword}
         secureTextEntry
         editable={!isLoading}
+        style={styles.input}
       />
 
-      <TouchableOpacity 
-        style={[styles.buttonPrimary, isLoading && styles.buttonDisabled]} 
+      <ThemedButton
+        title={isLoading ? 'Signing In...' : 'Sign In'}
         onPress={handleSignIn}
         disabled={isLoading}
-      >
-        <Text style={styles.buttonPrimaryText}>
-          {isLoading ? 'Signing In...' : 'Sign In'}
-        </Text>
-      </TouchableOpacity>
+        style={[styles.button, isLoading && styles.buttonDisabled]}
+      />
 
       <View style={styles.bottomTextContainer}>
-        <Text style={styles.buttonSecondaryText}>Don't have an account? </Text>
+        <ThemedText style={styles.bottomText}>Don't have an account? </ThemedText>
         <Pressable onPress={() => router.push('/auth/signUp')}>
-          <Text style={styles.signInLink}>Create new</Text>
+          <ThemedText style={[styles.signInLink, { color: theme.primary }]}>Create new</ThemedText>
         </Pressable>
       </View>
 
       {/* Modal Dialog */}
       {modalVisible && (
         <View style={styles.modalOverlay}>
-          <View style={styles.modalBox}>
-            <Text style={styles.errorText}>{message}</Text>
-            <TouchableOpacity
+          <View style={[styles.modalBox, { backgroundColor: theme.card }]}>
+            <ThemedText style={[styles.modalText, { color: theme.error || '#D32F2F' }]}>
+              {message}
+            </ThemedText>
+            <ThemedButton
+              title="OK"
               onPress={() => setModalVisible(false)}
-              style={styles.modalButton}
-            >
-              <Text style={styles.modalButtonText}>OK</Text>
-            </TouchableOpacity>
+              style={{ backgroundColor: theme.primary, width: 100 }}
+            />
           </View>
         </View>
       )}
-    </View>
+    </ThemedView>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: Colors.WHITE,
     justifyContent: 'center',
     padding: 24,
   },
   title: {
     fontSize: 32,
     fontWeight: 'bold',
-    color: Colors.BLUE_DARK,
     textAlign: 'center',
-    marginBottom: 32,
+    marginBottom: 12,
+  },
+  subtitle: {
+    fontSize: 16,
+    textAlign: 'center',
+    color: '#888',
+    marginBottom: 24,
   },
   input: {
-    height: 50,
-    backgroundColor: '#f9f9f9',
-    paddingHorizontal: 16,
-    borderRadius: 8,
-    marginBottom: 16,
-    borderColor: '#ccc',
-    borderWidth: 1,
-  },
-  buttonPrimary: {
-    backgroundColor: Colors.BLUE_DARK,
-    paddingVertical: 14,
     borderRadius: 10,
-    alignItems: 'center',
-    marginTop: 10,
+    marginBottom: 12,
+  },
+  button: {
+    marginTop: 12,
+    paddingVertical: 12,
+    borderRadius: 10,
   },
   buttonDisabled: {
-    backgroundColor: '#ccc',
-  },
-  buttonPrimaryText: {
-    color: Colors.WHITE,
-    fontSize: 18,
-    fontWeight: '600',
+    backgroundColor: '#aaa',
   },
   bottomTextContainer: {
     flexDirection: 'row',
     justifyContent: 'center',
     marginTop: 24,
   },
-  buttonSecondaryText: {
-    color: Colors.BLACK,
+  bottomText: {
     fontSize: 16,
     fontWeight: '500',
   },
   signInLink: {
-    color: Colors.BLUE,
     fontSize: 16,
-    fontWeight: '500',
+    fontWeight: '600',
   },
 
   // Modal Styles
   modalOverlay: {
     position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    top: 0, left: 0, right: 0, bottom: 0,
+    backgroundColor: 'rgba(0, 0, 0, 0.4)',
     justifyContent: 'center',
     alignItems: 'center',
     zIndex: 999,
   },
   modalBox: {
     width: '80%',
-    backgroundColor: '#fff',
     padding: 20,
-    borderRadius: 10,
-    elevation: 10,
-    shadowColor: '#000',
-    shadowOpacity: 0.25,
-    shadowOffset: { width: 0, height: 2 },
-    shadowRadius: 4,
+    borderRadius: 12,
     alignItems: 'center',
+    elevation: 6,
+    shadowColor: '#000',
+    shadowOpacity: 0.2,
+    shadowOffset: { width: 0, height: 3 },
+    shadowRadius: 5,
   },
-  errorText: {
-    color: '#721c24',
-    backgroundColor: '#f8d7da',
-    borderColor: '#f5c6cb',
-    borderWidth: 1,
+  modalText: {
     fontSize: 16,
     fontWeight: '500',
-    padding: 10,
-    borderRadius: 6,
     textAlign: 'center',
     marginBottom: 20,
-  },
-  modalButton: {
-    backgroundColor: Colors.GREEN_DARK,
-    paddingVertical: 10,
-    paddingHorizontal: 24,
-    borderRadius: 6,
-  },
-  modalButtonText: {
-    color: Colors.WHITE,
-    fontSize: 16,
-    fontWeight: '600',
   },
 });

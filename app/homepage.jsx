@@ -1,4 +1,4 @@
-// app/home.js
+
 import { Ionicons } from '@expo/vector-icons';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import AuthGuard from '../components/AuthGuard';
@@ -9,6 +9,7 @@ const Tab = createBottomTabNavigator();
 
 function HomePageTabs() {
   return (
+    
     <Tab.Navigator
       screenOptions={({ route }) => ({
         tabBarIcon: ({ color, size }) => {
@@ -20,7 +21,7 @@ function HomePageTabs() {
           }
           return <Ionicons name={iconName} size={size} color={color} />;
         },
-        tabBarActiveTintColor: '#2E7D32',
+        tabBarActiveTintColor: '#007AFF', // Blue color for active tab
         tabBarInactiveTintColor: 'gray',
         headerShown: false,
       })}

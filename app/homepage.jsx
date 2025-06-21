@@ -2,8 +2,11 @@ import { Ionicons } from '@expo/vector-icons';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import AuthGuard from '../components/AuthGuard';
 import useTheme from '../Theme/theme'; // ✅ Import your theme
-import AccountTab from './tabs/AccountTab';
-import VehicalTab from './tabs/VehicalTab';
+import HomeTab from './tabs/HomeTab';
+
+import NotificationTab from './tabs/NotificationTab'; // ✅ Import the new tab
+import SettingTab from './tabs/SettingTab'; // ✅ Import the new tab
+import UserTab from './tabs/UserTab';
 
 const Tab = createBottomTabNavigator();
 
@@ -15,24 +18,30 @@ function HomePageTabs() {
       screenOptions={({ route }) => ({
         tabBarIcon: ({ color, size }) => {
           let iconName;
-          if (route.name === 'Vehical') {
-            iconName = 'car-sport-outline';
-          } else if (route.name === 'Account') {
+          if (route.name === 'Home') {
+            iconName = 'home-outline'; // changed icon to represent home
+          } else if (route.name === 'User') {
             iconName = 'person-circle-outline';
+             } else if (route.name === 'Setting') {
+            iconName = 'settings-outline';
+          } else if (route.name === 'Notifications') {
+            iconName = 'notifications-outline';
           }
           return <Ionicons name={iconName} size={size} color={color} />;
         },
-        tabBarActiveTintColor: theme.primary,       // ✅ Use themed primary color
-        tabBarInactiveTintColor: theme.textMuted || 'gray', // Optional fallback
+        tabBarActiveTintColor: theme.primary,
+        tabBarInactiveTintColor: theme.textMuted || 'gray',
         tabBarStyle: {
-          backgroundColor: theme.background,        // ✅ Themed tab bar background
-          borderTopColor: theme.border || '#ccc',   // Optional border color
+          backgroundColor: theme.background,
+          borderTopColor: theme.border || '#ccc',
         },
         headerShown: false,
       })}
     >
-      <Tab.Screen name="Vehical" component={VehicalTab} />
-      <Tab.Screen name="Account" component={AccountTab} />
+      <Tab.Screen name="Home" component={HomeTab} />
+      <Tab.Screen name="User" component={UserTab} />
+      <Tab.Screen name="Setting" component={SettingTab} />
+      <Tab.Screen name="Notifications" component={NotificationTab} />
     </Tab.Navigator>
   );
 }

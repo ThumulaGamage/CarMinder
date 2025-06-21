@@ -4,14 +4,14 @@ import useTheme from '../../../../Theme/theme';
 import ThemedText from '../../../../components/ThemedText';
 import ThemedView from '../../../../components/ThemedView';
 
-export default function SettingsScreen() {
+export default function NotificationScreen() {
   const { id } = useLocalSearchParams();
   const theme = useTheme();
 
   return (
     <ThemedView style={styles.container}>
       <ThemedText style={[styles.text, { color: theme.text }]}>
-        Settings for Vehicle {id}
+        Notifications for Vehicle {id}
       </ThemedText>
     </ThemedView>
   );

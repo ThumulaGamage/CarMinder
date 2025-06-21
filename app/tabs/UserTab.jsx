@@ -1,6 +1,6 @@
 import { FontAwesome, MaterialIcons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
-import { Pressable, StyleSheet, View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 import { useUser } from '../../context/UserDetailContext';
 import useTheme from '../../Theme/theme';
 
@@ -8,7 +8,7 @@ import ThemedButton from '../../components/ThemedButton';
 import ThemedText from '../../components/ThemedText';
 import ThemedView from '../../components/ThemedView';
 
-export default function AccountTab() {
+export default function UserTab() {
   const { user, userDetails, logout } = useUser();
   const router = useRouter();
   const theme = useTheme();
@@ -19,29 +19,26 @@ export default function AccountTab() {
   };
 
   const navigateToSettings = () => {
-    router.push('/account/settings');
+    router.push('/settings'); // Make sure this path matches your actual settings route
   };
 
-  // Get initials for profile icon
   const getInitials = () => {
     if (!userDetails?.name) return '?';
     const names = userDetails.name.split(' ');
-    return names
-      .map(name => name[0])
-      .join('')
-      .toUpperCase()
-      .substring(0, 2);
+    return names.map(name => name[0]).join('').toUpperCase().substring(0, 2);
   };
 
   return (
     <ThemedView style={styles.container}>
-      {/* Header with settings button */}
-      <View style={styles.header}>
-        <Pressable onPress={navigateToSettings} style={styles.settingsButton}>
-          <MaterialIcons name="settings" size={24} color={theme.primary} />
-        </Pressable>
+      {/* Improved Header with top padding */}
+      <View style={[styles.header, { borderBottomColor: theme.border }]}>
+        <ThemedText style={[styles.headerTitle, { color: theme.text }]}>
+          My Profile
+        </ThemedText>
+   
       </View>
 
+      {/* Rest of your content remains the same */}
       {/* Profile section */}
       <View style={styles.profileSection}>
         <View style={[styles.profileIcon, { backgroundColor: theme.primary }]}>
@@ -75,10 +72,10 @@ export default function AccountTab() {
         </View>
 
         <View style={styles.infoRow}>
-          <MaterialIcons 
-            name={user?.emailVerified ? 'verified' : 'warning'} 
-            size={18} 
-            color={user?.emailVerified ? 'green' : 'orange'} 
+          <MaterialIcons
+            name={user?.emailVerified ? 'verified' : 'warning'}
+            size={18}
+            color={user?.emailVerified ? 'green' : 'orange'}
           />
           <ThemedText style={[styles.label, { color: theme.text }]}>Status:</ThemedText>
           <ThemedText
@@ -117,18 +114,32 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     padding: 20,
+    paddingTop: 50, // Added top padding to prevent overlap
   },
   header: {
     flexDirection: 'row',
-    justifyContent: 'flex-end',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingBottom: 15,
     marginBottom: 20,
+    borderBottomWidth: 1,
+  },
+  headerTitle: {
+    fontSize: 22,
+    fontWeight: 'bold',
   },
   settingsButton: {
     padding: 10,
+    borderRadius: 20,
+    width: 40,
+    height: 40,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   profileSection: {
     alignItems: 'center',
     marginBottom: 30,
+    paddingHorizontal: 20,
   },
   profileIcon: {
     width: 100,
@@ -147,14 +158,21 @@ const styles = StyleSheet.create({
     fontSize: 24,
     fontWeight: 'bold',
     marginBottom: 5,
+    textAlign: 'center',
   },
   userEmail: {
     fontSize: 16,
+    textAlign: 'center',
   },
   infoContainer: {
     padding: 20,
     borderRadius: 12,
     marginBottom: 20,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
   },
   infoRow: {
     flexDirection: 'row',
@@ -182,10 +200,11 @@ const styles = StyleSheet.create({
   },
   actionsContainer: {
     gap: 15,
+    paddingHorizontal: 10,
   },
   actionButton: {
-    paddingVertical: 12,
-    borderRadius: 8,
+    paddingVertical: 14,
+    borderRadius: 10,
     flexDirection: 'row',
     justifyContent: 'center',
     alignItems: 'center',

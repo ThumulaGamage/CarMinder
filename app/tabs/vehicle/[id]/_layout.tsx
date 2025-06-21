@@ -10,7 +10,7 @@ export default function VehicleLayout() {
   // Custom header back button component
   const HeaderBackButton = () => (
     <TouchableOpacity 
-      onPress={() => router.push('/tabs/VehicalTab')} // Navigate to VehicleTab
+      onPress={() => router.back()}
       style={{ marginLeft: 15 }}
     >
       <Ionicons name="arrow-back" size={24} color={theme.text} />
@@ -25,15 +25,22 @@ export default function VehicleLayout() {
         tabBarStyle: {
           backgroundColor: theme.card,
           borderTopColor: theme.border || '#ccc',
+          height: 70, // Reduce tab bar height
         },
         headerStyle: {
           backgroundColor: theme.card,
+          height: 100, // Reduce header height
         },
         headerTintColor: theme.text,
+        headerTitleAlign: 'center', // Center the header title
+        headerTitleStyle: {
+          fontSize: 18,
+          fontWeight: '600',
+        },
         tabBarIcon: ({ color, size }) => {
           let iconName: keyof typeof Ionicons.glyphMap = 'home-outline';
           switch (route.name) {
-            case 'home':
+            case 'vehical':
               iconName = 'car-outline';
               break;
             case 'service':
@@ -42,8 +49,8 @@ export default function VehicleLayout() {
             case 'licence':
               iconName = 'document-text-outline';
               break;
-            case 'setting':
-              iconName = 'settings-outline';
+            case 'Notification':
+              iconName = 'notifications-outline';
               break;
           }
           return <Ionicons name={iconName} size={size} color={color} />;
@@ -51,9 +58,9 @@ export default function VehicleLayout() {
       })}
     >
       <Tabs.Screen 
-        name="home" 
+        name="vehical" 
         options={{ 
-          title: 'Details',
+          title: 'Vehicle',
           headerTitle: 'Vehicle Details',
           headerLeft: () => <HeaderBackButton />,
         }} 
@@ -75,10 +82,10 @@ export default function VehicleLayout() {
         }} 
       />
       <Tabs.Screen 
-        name="setting" 
+        name="Notification" 
         options={{ 
-          title: 'Settings',
-          headerTitle: 'Vehicle Settings',
+          title: 'Notifications',
+          headerTitle: 'Notifications',
           headerLeft: () => <HeaderBackButton />,
         }} 
       />

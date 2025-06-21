@@ -100,10 +100,8 @@ const VehicleDetailScreen = () => {
   }
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: theme.background }}>
-    
-     
-
+   
+         
       <ScrollView 
         style={{ flex: 1 }}
         contentContainerStyle={styles.scrollContainer}
@@ -158,7 +156,7 @@ const VehicleDetailScreen = () => {
         {/* Additional space at bottom */}
         <View style={{ height: 30 }} />
       </ScrollView>
-    </SafeAreaView>
+    
   );
 };
 

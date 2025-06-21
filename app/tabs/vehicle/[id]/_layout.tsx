@@ -1,22 +1,43 @@
-// app/tabs/vehicle/[id]/_layout.tsx
 import { Ionicons } from '@expo/vector-icons';
-import { Tabs, useLocalSearchParams } from 'expo-router';
+import { Tabs, useRouter } from 'expo-router';
+import { TouchableOpacity } from 'react-native';
+import useTheme from '../../../../Theme/theme';
 
 export default function VehicleLayout() {
-  const { id } = useLocalSearchParams(); // get vehicle ID
+  const theme = useTheme();
+  const router = useRouter();
+
+  // Custom header back button component
+  const HeaderBackButton = () => (
+    <TouchableOpacity 
+      onPress={() => router.push('/tabs/VehicalTab')} // Navigate to VehicleTab
+      style={{ marginLeft: 15 }}
+    >
+      <Ionicons name="arrow-back" size={24} color={theme.text} />
+    </TouchableOpacity>
+  );
 
   return (
     <Tabs
       screenOptions={({ route }) => ({
-        headerTitle: `Vehicle ${id}`,
+        tabBarActiveTintColor: theme.primary,
+        tabBarInactiveTintColor: theme.textSecondary || '#999',
+        tabBarStyle: {
+          backgroundColor: theme.card,
+          borderTopColor: theme.border || '#ccc',
+        },
+        headerStyle: {
+          backgroundColor: theme.card,
+        },
+        headerTintColor: theme.text,
         tabBarIcon: ({ color, size }) => {
           let iconName: keyof typeof Ionicons.glyphMap = 'home-outline';
           switch (route.name) {
             case 'home':
-              iconName = 'home-outline';
+              iconName = 'car-outline';
               break;
             case 'service':
-              iconName = 'car-outline';
+              iconName = 'construct-outline';
               break;
             case 'licence':
               iconName = 'document-text-outline';
@@ -24,18 +45,43 @@ export default function VehicleLayout() {
             case 'setting':
               iconName = 'settings-outline';
               break;
-            default:
-              iconName = 'help-outline';
-              break;
           }
           return <Ionicons name={iconName} size={size} color={color} />;
         },
       })}
     >
-      <Tabs.Screen name="home" options={{ title: 'Home' }} />
-      <Tabs.Screen name="service" options={{ title: 'Service Record' }} />
-      <Tabs.Screen name="licence" options={{ title: 'Licence' }} />
-      <Tabs.Screen name="setting" options={{ title: 'Settings' }} />
+      <Tabs.Screen 
+        name="home" 
+        options={{ 
+          title: 'Details',
+          headerTitle: 'Vehicle Details',
+          headerLeft: () => <HeaderBackButton />,
+        }} 
+      />
+      <Tabs.Screen 
+        name="service" 
+        options={{ 
+          title: 'Service',
+          headerTitle: 'Service Records',
+          headerLeft: () => <HeaderBackButton />,
+        }} 
+      />
+      <Tabs.Screen 
+        name="licence" 
+        options={{ 
+          title: 'Documents',
+          headerTitle: 'Vehicle Documents',
+          headerLeft: () => <HeaderBackButton />,
+        }} 
+      />
+      <Tabs.Screen 
+        name="setting" 
+        options={{ 
+          title: 'Settings',
+          headerTitle: 'Vehicle Settings',
+          headerLeft: () => <HeaderBackButton />,
+        }} 
+      />
     </Tabs>
   );
 }

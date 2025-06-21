@@ -1,11 +1,31 @@
 import { useLocalSearchParams } from 'expo-router';
-import { Text, View } from 'react-native';
+import { StyleSheet } from 'react-native';
+import useTheme from '../../../../Theme/theme';
+import ThemedText from '../../../../components/ThemedText';
+import ThemedView from '../../../../components/ThemedView';
 
 export default function ServiceRecord() {
   const { id } = useLocalSearchParams();
+  const theme = useTheme();
+
   return (
-    <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
-      <Text>Service Record for Vehicle {id}</Text>
-    </View>
+    <ThemedView style={styles.container}>
+      <ThemedText style={[styles.text, { color: theme.text }]}>
+        Service Record for Vehicle {id}
+      </ThemedText>
+    </ThemedView>
   );
 }
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 24,
+  },
+  text: {
+    fontSize: 18,
+    textAlign: 'center',
+  },
+});

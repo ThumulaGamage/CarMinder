@@ -1,6 +1,6 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
 import { onAuthStateChanged, signOut } from 'firebase/auth';
 import { doc, getDoc } from 'firebase/firestore';
+import React, { createContext, useContext, useEffect, useState } from 'react';
 import { auth, db } from '../config/firebaseConfig';
 
 // Create the UserContext
@@ -22,10 +22,10 @@ export const UserProvider = ({ children }) => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  // Function to fetch user details from Firestore
-  const fetchUserDetails = async (email) => {
+  // ✅ Updated: fetch user details using UID instead of email
+  const fetchUserDetails = async (uid) => {
     try {
-      const userDocRef = doc(db, 'users', email);
+      const userDocRef = doc(db, 'users', uid); // using UID now
       const userDoc = await getDoc(userDocRef);
       
       if (userDoc.exists()) {
@@ -49,7 +49,6 @@ export const UserProvider = ({ children }) => {
       auth,
       async (firebaseUser) => {
         if (firebaseUser) {
-          // User is signed in
           const basicUserData = {
             uid: firebaseUser.uid,
             email: firebaseUser.email,
@@ -58,13 +57,12 @@ export const UserProvider = ({ children }) => {
             emailVerified: firebaseUser.emailVerified,
             phoneNumber: firebaseUser.phoneNumber,
           };
-          
+
           setUser(basicUserData);
-          
-          // Fetch additional user details from Firestore
-          await fetchUserDetails(firebaseUser.email);
+
+          // ✅ Updated: fetch details using UID
+          await fetchUserDetails(firebaseUser.uid);
         } else {
-          // User is signed out
           setUser(null);
           setUserDetails(null);
         }
@@ -77,11 +75,9 @@ export const UserProvider = ({ children }) => {
       }
     );
 
-    // Cleanup subscription on unmount
     return () => unsubscribe();
   }, []);
 
-  // Sign out function
   const logout = async () => {
     try {
       await signOut(auth);
@@ -94,14 +90,12 @@ export const UserProvider = ({ children }) => {
     }
   };
 
-  // Refresh user details
   const refreshUserDetails = async () => {
-    if (user?.email) {
-      await fetchUserDetails(user.email);
+    if (user?.uid) {
+      await fetchUserDetails(user.uid); // ✅ use UID
     }
   };
 
-  // Update user details in context (useful after profile updates)
   const updateUserDetails = (newDetails) => {
     setUserDetails(prevDetails => ({
       ...prevDetails,
@@ -110,14 +104,14 @@ export const UserProvider = ({ children }) => {
   };
 
   const value = {
-    user,                    // Firebase auth user data
-    userDetails,            // Firestore user document data
-    loading,                // Loading state
-    error,                  // Error state
-    logout,                 // Sign out function
-    refreshUserDetails,     // Refresh user data from Firestore
-    updateUserDetails,      // Update user details in context
-    isAuthenticated: !!user, // Boolean for authentication status
+    user,
+    userDetails,
+    loading,
+    error,
+    logout,
+    refreshUserDetails,
+    updateUserDetails,
+    isAuthenticated: !!user,
   };
 
   return (
@@ -128,3 +122,4 @@ export const UserProvider = ({ children }) => {
 };
 
 export { UserDetailContext };
+

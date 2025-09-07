@@ -1,23 +1,26 @@
-// components/AuthGuard.js
-import { useEffect } from 'react';
 import { useRouter } from 'expo-router';
-import { View, Text, ActivityIndicator } from 'react-native';
-import { useUser } from '../context/UserDetailContext';
+import { useEffect, useState } from 'react';
+import { ActivityIndicator, Text, View } from 'react-native';
 import Colors from '../constant/Colors';
+import { useUser } from '../context/UserDetailContext';
 
-export default function AuthGuard({ children }) {
+export default function AuthGuard({ children, redirectTo = '/welcome' }) {
   const { user, loading, isAuthenticated } = useUser();
   const router = useRouter();
+  const [hasCheckedAuth, setHasCheckedAuth] = useState(false);
 
   useEffect(() => {
-    if (!loading && !isAuthenticated) {
-      // Redirect to sign in if not authenticated
-      router.replace('/auth/signIn');
+    // Only redirect after we've finished loading AND we've done at least one auth check
+    if (!loading && hasCheckedAuth && !isAuthenticated) {
+      console.log('🔒 AuthGuard: User not authenticated, redirecting to:', redirectTo);
+      router.replace(redirectTo);
+    } else if (!loading) {
+      setHasCheckedAuth(true);
     }
-  }, [loading, isAuthenticated, router]);
+  }, [loading, isAuthenticated, router, redirectTo, hasCheckedAuth]);
 
   // Show loading screen while checking authentication
-  if (loading) {
+  if (loading || !hasCheckedAuth) {
     return (
       <View style={{
         flex: 1,
@@ -31,7 +34,7 @@ export default function AuthGuard({ children }) {
           fontSize: 16,
           color: Colors.GREEN_DARK
         }}>
-          Loading...
+          Checking access...
         </Text>
       </View>
     );
@@ -39,18 +42,39 @@ export default function AuthGuard({ children }) {
 
   // Don't render children if not authenticated
   if (!isAuthenticated) {
-    return null;
+    return (
+      <View style={{
+        flex: 1,
+        backgroundColor: Colors.WHITE,
+        justifyContent: 'center',
+        alignItems: 'center'
+      }}>
+        <Text style={{
+          fontSize: 16,
+          color: Colors.GREEN_DARK
+        }}>
+          Redirecting to sign in...
+        </Text>
+      </View>
+    );
   }
 
   // Render children if authenticated
   return children;
 }
 
-// Example usage in a protected route:
-// export default function ProtectedPage() {
-//   return (
-//     <AuthGuard>
-//       <YourPageContent />
-//     </AuthGuard>
-//   );
-// }
+// Usage examples:
+
+// For main app pages (use the main auth flow instead):
+// ❌ Don't use AuthGuard for homepage - let index.tsx handle it
+
+// For specific protected pages that can be accessed directly:
+// ✅ Use AuthGuard for individual protected screens
+// <AuthGuard redirectTo="/auth/signIn">
+//   <ProtectedFeaturePage />
+// </AuthGuard>
+
+// For admin-only pages:
+// <AuthGuard redirectTo="/not-authorized">
+//   <AdminOnlyPage />
+// </AuthGuard>

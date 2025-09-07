@@ -1,8 +1,17 @@
+import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { createUserWithEmailAndPassword } from 'firebase/auth';
 import { doc, setDoc } from 'firebase/firestore';
-import { useState } from 'react';
-import { Pressable, StyleSheet, View } from 'react-native';
+import { useEffect, useState } from 'react';
+import {
+  KeyboardAvoidingView,
+  Platform,
+  Pressable,
+  ScrollView,
+  StyleSheet,
+  TouchableOpacity,
+  View
+} from 'react-native';
 import { auth, db } from '../../config/firebaseConfig';
 import { useUser } from '../../context/UserDetailContext';
 import useTheme from '../../Theme/theme';
@@ -22,10 +31,28 @@ export default function SignUp() {
   const [messageType, setMessageType] = useState('');
   const [modalVisible, setModalVisible] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
   const router = useRouter();
   const theme = useTheme();
-  const { refreshUserDetails } = useUser();
+  const { refreshUserDetails, user, isAuthenticated, loading } = useUser();
+
+  // Debug: Monitor auth state changes
+  useEffect(() => {
+    console.log('🔍 SignUp - Auth State Debug:', {
+      isAuthenticated,
+      hasUser: !!user,
+      userEmail: user?.email,
+      loading
+    });
+
+    // If user becomes authenticated while on sign up page, redirect
+    if (isAuthenticated && user && !loading) {
+      console.log('🚀 SignUp - Auto-redirecting to homepage...');
+      router.replace('/homepage');
+    }
+  }, [isAuthenticated, user, loading, router]);
 
   const validateForm = () => {
     if (!name.trim()) {
@@ -67,10 +94,13 @@ export default function SignUp() {
 
     setIsLoading(true);
     try {
+      console.log('🔐 Starting account creation process...');
       const resp = await createUserWithEmailAndPassword(auth, email, password);
       const user = resp.user;
+      console.log('✅ Firebase account created successfully:', user.email);
       await SaveUser(user);
     } catch (error) {
+      console.log('❌ Account creation error:', error.code, error.message);
       let errorMessage = error.message;
       if (error.code === 'auth/email-already-in-use') {
         errorMessage = 'An account with this email already exists. Please sign in instead.';
@@ -92,6 +122,8 @@ export default function SignUp() {
   const SaveUser = async (user) => {
     try {
       if (!user || !user.uid) throw new Error('Invalid user object or missing UID');
+      
+      console.log('💾 Saving user data to Firestore...');
       const userData = {
         name: name.trim(),
         email: email.toLowerCase().trim(),
@@ -103,20 +135,28 @@ export default function SignUp() {
         accountStatus: 'active',
       };
       await setDoc(doc(db, 'users', user.uid), userData);
+      console.log('✅ User data saved successfully');
+      
       await refreshUserDetails();
+      console.log('✅ User details refreshed');
 
-      setMessage('Account created successfully!');
+      setMessage('Account created successfully! Redirecting...');
       setMessageType('success');
       setModalVisible(true);
 
+      // Clear form fields
       setName('');
       setEmail('');
       setPassword('');
       setConfirmPassword('');
 
+      // Wait a moment for UserDetailContext to update, then navigate manually
+      console.log('⏳ Waiting for auth state to update...');
       setTimeout(() => {
-        router.push('/homepage');
-      }, 2000);
+        console.log('🚀 Manual navigation to homepage...');
+        router.replace('/homepage');
+      }, 1500); // Give UserDetailContext time to update
+      
     } catch (error) {
       console.error('❌ Error saving user:', error.message);
       setMessage('Account created but error saving profile. Please sign in.');
@@ -125,79 +165,184 @@ export default function SignUp() {
     }
   };
 
+  const togglePasswordVisibility = () => {
+    setShowPassword(!showPassword);
+  };
+
+  const toggleConfirmPasswordVisibility = () => {
+    setShowConfirmPassword(!showConfirmPassword);
+  };
+
   const handleModalClose = () => {
     setModalVisible(false);
-    if (messageType === 'success') {
-      router.push('/homepage');
-    }
   };
 
   return (
-    <ThemedView style={styles.container}>
-      <ThemedText style={[styles.title, { color: theme.primary }]}>Create Account</ThemedText>
+    <KeyboardAvoidingView 
+      style={styles.container}
+      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+    >
+      <ScrollView 
+        contentContainerStyle={styles.scrollContainer}
+        showsVerticalScrollIndicator={false}
+        keyboardShouldPersistTaps="handled"
+      >
+        <ThemedView style={styles.formContainer}>
+          <ThemedText style={[styles.title, { color: theme.primary }]}>Create Account</ThemedText>
 
-      <ThemedTextInput placeholder="Full Name" value={name} onChangeText={setName} editable={!isLoading} />
-      <ThemedTextInput
-        placeholder="Email"
-        value={email}
-        onChangeText={setEmail}
-        keyboardType="email-address"
-        autoCapitalize="none"
-        editable={!isLoading}
-      />
-      <ThemedTextInput
-        placeholder="Password"
-        value={password}
-        onChangeText={setPassword}
-        secureTextEntry
-        editable={!isLoading}
-      />
-      <ThemedTextInput
-        placeholder="Confirm Password"
-        value={confirmPassword}
-        onChangeText={setConfirmPassword}
-        secureTextEntry
-        editable={!isLoading}
-      />
-
-      <ThemedButton
-        title={isLoading ? 'Creating Account...' : 'Sign Up'}
-        onPress={CreateNewAccount}
-        style={isLoading && { backgroundColor: '#aaa' }}
-      />
-
-      <View style={styles.bottomTextContainer}>
-        <ThemedText style={styles.buttonSecondaryText}>Already have an account? </ThemedText>
-        <Pressable onPress={() => router.push('/auth/signIn')}>
-          <ThemedText style={[styles.signInLink, { color: theme.primary }]}>Sign In</ThemedText>
-        </Pressable>
-      </View>
-
-      {modalVisible && (
-        <View style={styles.modalOverlay}>
-          <View style={[styles.modalBox, { backgroundColor: theme.card }]}>
-            <ThemedText
-              style={[
-                styles.modalText,
-                messageType === 'success' ? { color: '#155724' } : { color: '#721c24' },
-              ]}
-            >
-              {message}
+          {/* Debug info */}
+          <View style={styles.debugContainer}>
+            <ThemedText style={styles.debugText}>
+              Auth Status: {isAuthenticated ? '✅ Signed In' : '❌ Not Signed In'}
             </ThemedText>
-            <ThemedButton
-              title="OK"
-              onPress={handleModalClose}
-              style={{ backgroundColor: theme.primary }}
-            />
+            <ThemedText style={styles.debugText}>
+              Loading: {loading ? 'Yes' : 'No'}
+            </ThemedText>
+            {user && (
+              <ThemedText style={styles.debugText}>
+                User: {user.email}
+              </ThemedText>
+            )}
           </View>
-        </View>
-      )}
-    </ThemedView>
+
+          <ThemedTextInput 
+            placeholder="Full Name" 
+            value={name} 
+            onChangeText={setName} 
+            editable={!isLoading}
+            style={styles.input}
+          />
+          
+          <ThemedTextInput
+            placeholder="Email"
+            value={email}
+            onChangeText={setEmail}
+            keyboardType="email-address"
+            autoCapitalize="none"
+            editable={!isLoading}
+            style={styles.input}
+          />
+          
+          {/* Password Field with Toggle */}
+          <View style={styles.passwordContainer}>
+            <ThemedTextInput
+              placeholder="Password"
+              value={password}
+              onChangeText={setPassword}
+              secureTextEntry={!showPassword}
+              editable={!isLoading}
+              style={[styles.input, styles.passwordInput]}
+            />
+            <TouchableOpacity
+              style={styles.eyeIcon}
+              onPress={togglePasswordVisibility}
+              activeOpacity={0.7}
+            >
+              <Ionicons
+                name={showPassword ? 'eye-off' : 'eye'}
+                size={20}
+                color={theme.text || '#666'}
+              />
+            </TouchableOpacity>
+          </View>
+
+          {/* Confirm Password Field with Toggle */}
+          <View style={styles.passwordContainer}>
+            <ThemedTextInput
+              placeholder="Confirm Password"
+              value={confirmPassword}
+              onChangeText={setConfirmPassword}
+              secureTextEntry={!showConfirmPassword}
+              editable={!isLoading}
+              style={[styles.input, styles.passwordInput]}
+            />
+            <TouchableOpacity
+              style={styles.eyeIcon}
+              onPress={toggleConfirmPasswordVisibility}
+              activeOpacity={0.7}
+            >
+              <Ionicons
+                name={showConfirmPassword ? 'eye-off' : 'eye'}
+                size={20}
+                color={theme.text || '#666'}
+              />
+            </TouchableOpacity>
+          </View>
+
+          {/* Password Strength Indicator */}
+          {password.length > 0 && (
+            <View style={styles.passwordStrength}>
+              <ThemedText style={[
+                styles.strengthText,
+                { color: password.length >= 6 ? '#4CAF50' : '#FF9800' }
+              ]}>
+                {password.length >= 6 ? '✓ Password meets requirements' : '⚠ Password must be at least 6 characters'}
+              </ThemedText>
+            </View>
+          )}
+
+          <ThemedButton
+            title={isLoading ? 'Creating Account...' : 'Sign Up'}
+            onPress={CreateNewAccount}
+            style={[styles.button, isLoading && { backgroundColor: '#aaa' }]}
+            disabled={isLoading}
+          />
+
+          {/* Debug navigation button */}
+          {isAuthenticated && user && (
+            <TouchableOpacity 
+              style={[styles.debugButton, { backgroundColor: theme.primary }]}
+              onPress={() => {
+                console.log('🔧 Debug: Manual navigation to homepage');
+                router.replace('/homepage');
+              }}
+            >
+              <ThemedText style={styles.debugButtonText}>
+                Go to Homepage (Debug)
+              </ThemedText>
+            </TouchableOpacity>
+          )}
+
+          <View style={styles.bottomTextContainer}>
+            <ThemedText style={styles.buttonSecondaryText}>Already have an account? </ThemedText>
+            <Pressable onPress={() => router.push('/auth/signIn')}>
+              <ThemedText style={[styles.signInLink, { color: theme.primary }]}>Sign In</ThemedText>
+            </Pressable>
+          </View>
+
+          {modalVisible && (
+            <View style={styles.modalOverlay}>
+              <View style={[styles.modalBox, { backgroundColor: theme.card }]}>
+                <ThemedText
+                  style={[
+                    styles.modalText,
+                    messageType === 'success' ? { color: '#155724' } : { color: '#721c24' },
+                  ]}
+                >
+                  {message}
+                </ThemedText>
+                <ThemedButton
+                  title="OK"
+                  onPress={handleModalClose}
+                  style={{ backgroundColor: theme.primary, width: 100 }}
+                />
+              </View>
+            </View>
+          )}
+        </ThemedView>
+      </ScrollView>
+    </KeyboardAvoidingView>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
+    flex: 1,
+  },
+  scrollContainer: {
+    flexGrow: 1,
+  },
+  formContainer: {
     flex: 1,
     justifyContent: 'center',
     padding: 24,
@@ -207,6 +352,60 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     textAlign: 'center',
     marginBottom: 32,
+  },
+  debugContainer: {
+    backgroundColor: '#f0f0f0',
+    padding: 10,
+    borderRadius: 8,
+    marginBottom: 20,
+  },
+  debugText: {
+    fontSize: 12,
+    color: '#666',
+    marginBottom: 2,
+  },
+  input: {
+    borderRadius: 10,
+    marginBottom: 12,
+  },
+  passwordContainer: {
+    position: 'relative',
+    marginBottom: 12,
+  },
+  passwordInput: {
+    marginBottom: 0,
+    paddingRight: 50, // Make space for eye icon
+  },
+  eyeIcon: {
+    position: 'absolute',
+    right: 15,
+    top: '50%',
+    transform: [{ translateY: -10 }],
+    padding: 5,
+  },
+  passwordStrength: {
+    marginBottom: 16,
+    paddingHorizontal: 4,
+  },
+  strengthText: {
+    fontSize: 12,
+    fontWeight: '500',
+  },
+  button: {
+    marginTop: 12,
+    paddingVertical: 12,
+    borderRadius: 10,
+  },
+  debugButton: {
+    marginTop: 12,
+    paddingVertical: 12,
+    borderRadius: 10,
+    alignItems: 'center',
+  },
+  debugButtonText: {
+    color: '#fff',
+    fontSize: 14,
+    fontWeight: '600',
   },
   bottomTextContainer: {
     flexDirection: 'row',

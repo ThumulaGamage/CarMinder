@@ -1,136 +1,121 @@
-import { LinearGradient } from 'expo-linear-gradient';
-import { useRouter } from "expo-router";
-import { Dimensions, Image, StyleSheet, Text, TouchableOpacity, View } from "react-native";
-import Colors from "../constant/Colors";
+import { useRouter } from 'expo-router';
+import { useEffect, useState } from 'react';
+import { ActivityIndicator, StyleSheet, Text, View } from 'react-native';
+import Colors from '../constant/Colors';
+import { useUser } from '../context/UserDetailContext';
 
-const { width, height } = Dimensions.get('window');
-
-export default function WelcomeScreen() {
+export default function Index() {
+  const { loading, isAuthenticated, user, error } = useUser();
   const router = useRouter();
+  const [hasNavigated, setHasNavigated] = useState(false);
 
-  return (
-    <View style={styles.container}>
-      {/* Hero Image with Gradient Overlay */}
-      <View style={styles.imageContainer}>
-        <Image 
-          source={require('../assets/images/start.jpg')} 
-          style={styles.heroImage}
-          resizeMode="cover"
-        />
-        <LinearGradient
-          colors={['rgba(16, 26, 83, 0.1)', 'rgba(16, 26, 83, 1)']}
-          style={styles.gradientOverlay}
-          start={{ x: 0, y: 0 }}
-          end={{ x: 0, y: 1 }}
-        />
-      </View>
+  useEffect(() => {
+    console.log('📱 Index - Auth State Update:', {
+      loading,
+      isAuthenticated,
+      hasUser: !!user,
+      userEmail: user?.email,
+      hasNavigated,
+      error
+    });
 
-      {/* Content Section */}
-      <View style={styles.contentContainer}>
-        <Text style={styles.title}>Welcome to CarMinder!</Text>
-        <Text style={styles.subtitle}>Start with Vehicle Maintenance Made Easier</Text>
+    // Only navigate if we haven't navigated yet and loading is complete
+    if (!loading && !hasNavigated) {
+      if (isAuthenticated && user) {
+        console.log('✅ Index - Auto-login successful, navigating to homepage');
+        setHasNavigated(true);
+        router.replace('/homepage');
+      } else {
+        console.log('🔐 Index - No authenticated user, navigating to welcome');
+        setHasNavigated(true);
+        router.replace('/welcome');
+      }
+    }
+  }, [loading, isAuthenticated, user, router, hasNavigated, error]);
 
-        {/* Action Buttons */}
-        <View style={styles.buttonGroup}>
-          <TouchableOpacity 
-            style={[styles.button, styles.primaryButton]}
-            onPress={() => router.push('/auth/signUp')}
-            activeOpacity={0.8}
-          >
-            <Text style={[styles.buttonText, styles.primaryButtonText]}>Get Started</Text>
-          </TouchableOpacity>
+  // Reset navigation flag when auth state changes significantly
+  useEffect(() => {
+    if (loading) {
+      setHasNavigated(false);
+    }
+  }, [loading]);
 
-          <TouchableOpacity 
-            style={[styles.button, styles.secondaryButton]}
-            onPress={() => router.push('/auth/signIn')}
-            activeOpacity={0.8}
-          >
-            <Text style={[styles.buttonText, styles.secondaryButtonText]}>Already have an Account</Text>
-          </TouchableOpacity>
+  // Show loading screen while Firebase checks authentication status
+  if (loading || !hasNavigated) {
+    return (
+      <View style={styles.loadingContainer}>
+        <ActivityIndicator size="large" color={Colors.PRIMARY || '#007AFF'} />
+        <Text style={styles.loadingText}>
+          {loading ? 'Loading CarMinder...' : 'Navigating...'}
+        </Text>
+        
+        {/* Debug info */}
+        <View style={styles.debugContainer}>
+          <Text style={styles.debugText}>Loading: {loading ? 'Yes' : 'No'}</Text>
+          <Text style={styles.debugText}>Authenticated: {isAuthenticated ? 'Yes' : 'No'}</Text>
+          <Text style={styles.debugText}>Has User: {user ? 'Yes' : 'No'}</Text>
+          <Text style={styles.debugText}>Has Navigated: {hasNavigated ? 'Yes' : 'No'}</Text>
+          {error && <Text style={styles.debugText}>Error: {error}</Text>}
         </View>
       </View>
-    </View>
-  );
+    );
+  }
+
+  // Show error if something went wrong
+  if (error) {
+    return (
+      <View style={styles.errorContainer}>
+        <Text style={styles.errorText}>Something went wrong</Text>
+        <Text style={styles.errorDetails}>{error}</Text>
+      </View>
+    );
+  }
+
+  return null; // This should not render since we redirect above
 }
 
 const styles = StyleSheet.create({
-  container: {
+  loadingContainer: {
     flex: 1,
-    backgroundColor: Colors.WHITE,
-  },
-  imageContainer: {
-    width: '100%',
-    height: height * 0.55,
-    position: 'relative',
-  },
-  heroImage: {
-    width: '100%',
-    height: '100%',
-  },
-  gradientOverlay: {
-    position: 'absolute',
-    left: 0,
-    right: 0,
-    bottom: 0,
-    height: '40%',
-  },
-  contentContainer: {
-    flex: 1,
-    backgroundColor: 'rgb(16, 26, 83)',
-    paddingHorizontal: 32,
-    paddingTop: 40,
-    paddingBottom: 30,
-    borderTopLeftRadius: 30,
-    borderTopRightRadius: 30,
-    marginTop: -30,
-  },
-  title: {
-    color: Colors.WHITE,
-    fontSize: 32,
-    fontWeight: '800',
-    textAlign: 'center',
-    marginBottom: 12,
-    letterSpacing: 0.5,
-  },
-  subtitle: {
-    color: 'rgba(255, 255, 255, 0.8)',
-    fontSize: 18,
-    textAlign: 'center',
-    marginBottom: 40,
-    lineHeight: 24,
-  },
-  buttonGroup: {
-    marginTop: 20,
-    gap: 16,
-  },
-  button: {
-    paddingVertical: 18,
-    borderRadius: 14,
-    alignItems: 'center',
     justifyContent: 'center',
-    shadowColor: Colors.BLACK,
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.1,
-    shadowRadius: 8,
-    elevation: 4,
+    alignItems: 'center',
+    backgroundColor: Colors.WHITE || '#fff',
   },
-  primaryButton: {
-    backgroundColor: Colors.WHITE,
+  loadingText: {
+    marginTop: 20,
+    fontSize: 16,
+    color: Colors.PRIMARY || '#007AFF',
+    fontWeight: '500',
   },
-  secondaryButton: {
-    backgroundColor: 'transparent',
-    borderWidth: 2,
-    borderColor: Colors.WHITE,
+  debugContainer: {
+    marginTop: 30,
+    backgroundColor: '#f0f0f0',
+    padding: 15,
+    borderRadius: 8,
+    width: '80%',
   },
-  buttonText: {
-    fontSize: 18,
-    fontWeight: '600',
+  debugText: {
+    fontSize: 12,
+    color: '#666',
+    marginBottom: 3,
     textAlign: 'center',
   },
-  primaryButtonText: {
-    color: 'rgb(16, 26, 83)',
+  errorContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: Colors.WHITE || '#fff',
+    padding: 20,
   },
-  secondaryButtonText: {
-    color: Colors.WHITE,
+  errorText: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#ff4444',
+    marginBottom: 10,
+  },
+  errorDetails: {
+    fontSize: 14,
+    color: '#666',
+    textAlign: 'center',
   },
 });

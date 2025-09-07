@@ -3,10 +3,8 @@ import { doc, getDoc } from 'firebase/firestore';
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { auth, db } from '../config/firebaseConfig';
 
-// Create the UserContext
 const UserDetailContext = createContext();
 
-// Custom hook to use the UserContext
 export const useUser = () => {
   const context = useContext(UserDetailContext);
   if (!context) {
@@ -15,40 +13,46 @@ export const useUser = () => {
   return context;
 };
 
-// UserProvider component
 export const UserProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [userDetails, setUserDetails] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  // ✅ Updated: fetch user details using UID instead of email
   const fetchUserDetails = async (uid) => {
     try {
-      const userDocRef = doc(db, 'users', uid); // using UID now
+      console.log('📥 Fetching user details for UID:', uid);
+      const userDocRef = doc(db, 'users', uid);
       const userDoc = await getDoc(userDocRef);
       
       if (userDoc.exists()) {
         const userData = userDoc.data();
         setUserDetails(userData);
+        console.log('✅ User details loaded:', userData.name);
         return userData;
       } else {
-        console.log('No user document found in Firestore');
+        console.log('❌ No user document found in Firestore');
+        setUserDetails(null);
         return null;
       }
     } catch (error) {
-      console.error('Error fetching user details:', error);
-      setError(error.message);
+      console.error('❌ Error fetching user details:', error);
+      setError(`Failed to load user profile: ${error.message}`);
+      setUserDetails(null);
       return null;
     }
   };
 
   useEffect(() => {
-    // Listen for authentication state changes
+    console.log('🔄 Setting up auth state listener...');
+    
     const unsubscribe = onAuthStateChanged(
       auth,
       async (firebaseUser) => {
+        console.log('🔐 Auth state changed:', firebaseUser ? `User: ${firebaseUser.email}` : 'No user');
+        
         if (firebaseUser) {
+          // User is signed in
           const basicUserData = {
             uid: firebaseUser.uid,
             email: firebaseUser.email,
@@ -59,59 +63,90 @@ export const UserProvider = ({ children }) => {
           };
 
           setUser(basicUserData);
-
-          // ✅ Updated: fetch details using UID
+          setError(null); // Clear any previous errors
+          
+          // Fetch additional user details from Firestore
           await fetchUserDetails(firebaseUser.uid);
         } else {
+          // User is signed out
           setUser(null);
           setUserDetails(null);
+          setError(null);
         }
+        
         setLoading(false);
       },
-      (error) => {
-        console.error('Auth state change error:', error);
-        setError(error.message);
+      (authError) => {
+        console.error('❌ Auth state change error:', authError);
+        setError(`Authentication error: ${authError.message}`);
         setLoading(false);
       }
     );
 
-    return () => unsubscribe();
+    // Cleanup subscription on unmount
+    return () => {
+      console.log('🧹 Cleaning up auth listener');
+      unsubscribe();
+    };
   }, []);
 
   const logout = async () => {
     try {
+      setLoading(true); // Show loading during logout
+      console.log('🚪 Signing out user...');
+      
       await signOut(auth);
-      setUser(null);
-      setUserDetails(null);
+      // onAuthStateChanged will automatically clear user state
+      
       console.log('✅ User signed out successfully');
     } catch (error) {
       console.error('❌ Error signing out:', error);
-      setError(error.message);
+      setError(`Sign out failed: ${error.message}`);
+    } finally {
+      setLoading(false);
     }
   };
 
   const refreshUserDetails = async () => {
     if (user?.uid) {
-      await fetchUserDetails(user.uid); // ✅ use UID
+      console.log('🔄 Refreshing user details...');
+      await fetchUserDetails(user.uid);
+    } else {
+      console.log('⚠️ Cannot refresh: No authenticated user');
     }
   };
 
   const updateUserDetails = (newDetails) => {
+    console.log('📝 Updating user details locally:', Object.keys(newDetails));
     setUserDetails(prevDetails => ({
       ...prevDetails,
       ...newDetails
     }));
   };
 
+  const clearError = () => {
+    setError(null);
+  };
+
   const value = {
+    // User data
     user,
     userDetails,
+    
+    // States
     loading,
     error,
+    isAuthenticated: !!user,
+    
+    // Actions
     logout,
     refreshUserDetails,
     updateUserDetails,
-    isAuthenticated: !!user,
+    clearError,
+    
+    // Computed properties
+    displayName: userDetails?.name || user?.displayName || user?.email?.split('@')[0] || 'User',
+    isEmailVerified: user?.emailVerified || false,
   };
 
   return (
@@ -122,4 +157,3 @@ export const UserProvider = ({ children }) => {
 };
 
 export { UserDetailContext };
-

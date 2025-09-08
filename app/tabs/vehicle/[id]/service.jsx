@@ -9,7 +9,9 @@ export default function ServiceRecord() {
   const theme = useTheme();
 
   return (
+    
     <ThemedView style={styles.container}>
+      
       <ThemedText style={[styles.text, { color: theme.text }]}>
         Service Record for Vehicle {id}
       </ThemedText>

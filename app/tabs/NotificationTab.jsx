@@ -1,7 +1,7 @@
 import { Ionicons } from '@expo/vector-icons';
-import { useRouter } from 'expo-router';
+import { Stack, useRouter } from 'expo-router';
 import { collection, getDocs, orderBy, query, where } from 'firebase/firestore';
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import {
   ActivityIndicator,
   FlatList,
@@ -78,12 +78,9 @@ export default function NotificationTab() {
   const router = useRouter();
   const [loading, setLoading] = useState(true);
   const [notifications, setNotifications] = useState([]);
+  const [refreshing, setRefreshing] = useState(false);
 
-  useEffect(() => {
-    loadNotifications();
-  }, []);
-
-  const loadNotifications = async () => {
+  const loadNotifications = useCallback(async () => {
     try {
       const user = auth.currentUser;
       if (!user) {
@@ -147,6 +144,7 @@ export default function NotificationTab() {
                 status,
                 expireDate: insuranceData.expireDate,
                 onPress: () => router.push(`/tabs/vehicle/${vehicle.id}/licence`)
+                
               });
             }
           }
@@ -168,7 +166,47 @@ export default function NotificationTab() {
       console.error('Error loading notifications:', error);
     } finally {
       setLoading(false);
+      setRefreshing(false);
     }
+  }, []);
+
+  useEffect(() => {
+    loadNotifications();
+  }, [loadNotifications]);
+
+  const handleRefresh = useCallback(async () => {
+    setRefreshing(true);
+    await loadNotifications();
+  }, [loadNotifications]);
+
+  // Header Right Component
+  const HeaderRight = () => (
+    <TouchableOpacity 
+      onPress={handleRefresh}
+      style={styles.headerButton}
+      disabled={refreshing}
+    >
+      <Ionicons 
+        name="refresh" 
+        size={24} 
+        color={refreshing ? theme.textMuted : theme.primary} 
+      />
+    </TouchableOpacity>
+  );
+
+  // Notification Badge Component for header
+  const NotificationBadge = () => {
+    const totalNotifications = notifications.reduce((total, group) => total + group.notifications.length, 0);
+    
+    if (totalNotifications === 0) return null;
+    
+    return (
+      <View style={[styles.headerBadge, { backgroundColor: theme.primary }]}>
+        <Text style={styles.headerBadgeText}>
+          {totalNotifications > 99 ? '99+' : totalNotifications}
+        </Text>
+      </View>
+    );
   };
 
   const NotificationItem = ({ notification }) => (
@@ -229,7 +267,7 @@ export default function NotificationTab() {
             {item.vehicle.plate}
           </Text>
         </View>
-        <View style={styles.notificationCount}>
+        <View style={[styles.notificationCount, { backgroundColor: theme.primary + '15' }]}>
           <Text style={[styles.countText, { color: theme.primary }]}>
             {item.notifications.length}
           </Text>
@@ -247,54 +285,90 @@ export default function NotificationTab() {
 
   if (loading) {
     return (
-      <View style={[styles.container, { backgroundColor: theme.background }]}>
-        <View style={styles.centered}>
-          <ActivityIndicator size="large" color={theme.primary} />
-          <Text style={[styles.loadingText, { color: theme.text }]}>
-            Loading notifications...
-          </Text>
+      <>
+        <Stack.Screen 
+          options={{
+            title: "Notifications",
+            headerShown: true,
+            headerRight: () => <HeaderRight />
+          }} 
+        />
+        <View style={[styles.container, { backgroundColor: theme.background }]}>
+          <View style={styles.centered}>
+            <ActivityIndicator size="large" color={theme.primary} />
+            <Text style={[styles.loadingText, { color: theme.text }]}>
+              Loading notifications...
+            </Text>
+          </View>
         </View>
-      </View>
+      </>
     );
   }
 
   if (notifications.length === 0) {
     return (
-      <View style={[styles.container, { backgroundColor: theme.background }]}>
-        <View style={styles.centered}>
-          <Ionicons name="notifications-off" size={64} color={theme.textMuted} />
-          <Text style={[styles.emptyTitle, { color: theme.text }]}>
-            No Notifications
-          </Text>
-          <Text style={[styles.emptySubtitle, { color: theme.textMuted }]}>
-            All your vehicle documents are up to date!
-          </Text>
+      <>
+        <Stack.Screen 
+          options={{
+            title: "Notifications",
+            headerShown: true,
+            headerRight: () => <HeaderRight />
+          }} 
+        />
+        <View style={[styles.container, { backgroundColor: theme.background }]}>
+          <View style={styles.centered}>
+            <Ionicons name="notifications-off" size={64} color={theme.textMuted} />
+            <Text style={[styles.emptyTitle, { color: theme.text }]}>
+              No Notifications
+            </Text>
+            <Text style={[styles.emptySubtitle, { color: theme.textMuted }]}>
+              All your vehicle documents are up to date!
+            </Text>
+            <TouchableOpacity 
+              style={[styles.refreshButton, { backgroundColor: theme.primary }]}
+              onPress={handleRefresh}
+            >
+              <Ionicons name="refresh" size={20} color="white" style={styles.refreshIcon} />
+              <Text style={styles.refreshButtonText}>Check Again</Text>
+            </TouchableOpacity>
+          </View>
         </View>
-      </View>
+      </>
     );
   }
 
   return (
-    <View style={[styles.container, { backgroundColor: theme.background }]}>
-      {/* Header */}
-      <View style={styles.header}>
-        <Text style={[styles.headerTitle, { color: theme.text }]}>
-          Vehicle Notifications
-        </Text>
-        <TouchableOpacity onPress={loadNotifications}>
-          <Ionicons name="refresh" size={24} color={theme.primary} />
-        </TouchableOpacity>
-      </View>
-
-      {/* Notifications List */}
-      <FlatList
-        data={notifications}
-        keyExtractor={(item) => item.vehicle.id}
-        renderItem={({ item }) => <VehicleNotificationGroup item={item} />}
-        showsVerticalScrollIndicator={false}
-        contentContainerStyle={styles.listContent}
+    <>
+      <Stack.Screen 
+         options={{
+    title: "Notifications",
+    headerShown: true,
+    headerTitleAllowFontScaling: true,
+    headerTitleStyle: {
+      fontSize: 24,
+      fontWeight: 'bold',
+    },
+          headerRight: () => (
+            <View style={styles.headerRightContainer}>
+              <NotificationBadge />
+              <HeaderRight />
+            </View>
+          )
+        }} 
       />
-    </View>
+      <View style={[styles.container, { backgroundColor: theme.background }]}>
+        {/* Notifications List */}
+        <FlatList
+          data={notifications}
+          keyExtractor={(item) => item.vehicle.id}
+          renderItem={({ item }) => <VehicleNotificationGroup item={item} />}
+          showsVerticalScrollIndicator={false}
+          contentContainerStyle={styles.listContent}
+          refreshing={refreshing}
+          onRefresh={handleRefresh}
+        />
+      </View>
+    </>
   );
 }
 
@@ -321,20 +395,49 @@ const styles = StyleSheet.create({
   emptySubtitle: {
     fontSize: 16,
     textAlign: 'center',
+    marginBottom: 20,
   },
-  header: {
+  refreshButton: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
     alignItems: 'center',
     paddingHorizontal: 20,
-    paddingVertical: 16,
+    paddingVertical: 12,
+    borderRadius: 25,
   },
-  headerTitle: {
-    fontSize: 24,
+  refreshIcon: {
+    marginRight: 8,
+  },
+  refreshButtonText: {
+    color: 'white',
+    fontSize: 16,
+    fontWeight: '600',
+  },
+  headerButton: {
+    marginRight: 15,
+    padding: 5,
+  },
+  headerRightContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginRight: 10,
+  },
+  headerBadge: {
+    minWidth: 20,
+    height: 20,
+    borderRadius: 10,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 8,
+    paddingHorizontal: 6,
+  },
+  headerBadgeText: {
+    color: 'white',
+    fontSize: 12,
     fontWeight: 'bold',
   },
   listContent: {
     paddingHorizontal: 16,
+    paddingVertical: 10,
     paddingBottom: 20,
   },
   vehicleGroup: {
@@ -376,7 +479,6 @@ const styles = StyleSheet.create({
     width: 28,
     height: 28,
     borderRadius: 14,
-    backgroundColor: 'rgba(0,0,0,0.05)',
     justifyContent: 'center',
     alignItems: 'center',
   },

@@ -1146,7 +1146,7 @@ const styles = StyleSheet.create({
     borderBottomWidth: StyleSheet.hairlineWidth,
   },
   headerTitle: {
-    fontSize: 20,
+    fontSize: 24,
     fontWeight: '600',
   },
   scrollView: {

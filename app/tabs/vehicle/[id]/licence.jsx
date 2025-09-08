@@ -2,16 +2,16 @@ import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { addDoc, collection, doc, getDoc, getDocs, query, setDoc, where } from 'firebase/firestore';
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import {
-    ActivityIndicator,
-    Alert,
-    ScrollView,
-    StyleSheet,
-    Text,
-    TextInput,
-    TouchableOpacity,
-    View,
+  ActivityIndicator,
+  Alert,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import ThemedText from '../../../../components/ThemedText';
@@ -27,6 +27,17 @@ const getVehicleIcon = (type) => {
     case 'truck': return 'car-outline';
     case 'bus': return 'bus';
     default: return 'car';
+  }
+};
+
+// Helper function for status icons
+const getStatusIcon = (status) => {
+  switch (status) {
+    case 'expired': return 'close-circle';
+    case 'critical': return 'warning';
+    case 'warning': return 'alert-circle';
+    case 'valid': return 'checkmark-circle';
+    default: return 'information-circle';
   }
 };
 
@@ -410,6 +421,36 @@ export default function LicenceScreen() {
     }
   };
 
+  // Duration Info Component
+  const DurationInfo = ({ startDate, expireDate, reminderStatus, title }) => {
+    if (!startDate || !expireDate) return null;
+    
+    return (
+      <ThemedView style={[styles.card, { backgroundColor: theme.card }]}>
+        <View style={[styles.cardHeader, { borderBottomColor: theme.border + '30' }]}>
+          <Ionicons name="time" size={24} color={theme.primary} />
+          <ThemedText style={[styles.cardTitle, { color: theme.text }]}>
+            {title}
+          </ThemedText>
+        </View>
+        <ThemedText style={[styles.durationText, { color: theme.textMuted }]}>
+          Total validity: {Math.ceil((new Date(expireDate) - new Date(startDate)) / (1000 * 60 * 60 * 24))} days
+        </ThemedText>
+        <ThemedText style={[styles.durationText, { color: theme.textMuted }]}>
+          From: {formatDateForDisplay(startDate)}
+        </ThemedText>
+        <ThemedText style={[styles.durationText, { color: theme.textMuted }]}>
+          To: {formatDateForDisplay(expireDate)}
+        </ThemedText>
+        {getDaysRemaining(expireDate) !== null && (
+          <ThemedText style={[styles.durationText, { color: getStatusColor(reminderStatus), fontWeight: 'bold' }]}>
+            Status: {getDaysRemaining(expireDate) >= 0 ? `${getDaysRemaining(expireDate)} days remaining` : 'EXPIRED'}
+          </ThemedText>
+        )}
+      </ThemedView>
+    );
+  };
+
   if (loading) {
     return (
       <SafeAreaView style={{ flex: 1, backgroundColor: theme.background }}>
@@ -443,7 +484,13 @@ export default function LicenceScreen() {
   }
 
   return (
-        <ScrollView style={[styles.container, { backgroundColor: theme.background }]}>
+    
+    
+      <ScrollView 
+        style={{ flex: 1 }}
+        contentContainerStyle={[styles.scrollContainer, { backgroundColor: theme.background }]}
+        showsVerticalScrollIndicator={false}
+      >
         {/* Vehicle Header Section */}
         <LinearGradient
           colors={[theme.primary + '20', theme.background]}
@@ -515,124 +562,183 @@ export default function LicenceScreen() {
             {/* License Status Display */}
             {reminderStatus && (
               <View style={[styles.statusBadge, { backgroundColor: getStatusColor(reminderStatus) }]}>
-                <ThemedText style={styles.statusText}>
-                  {getStatusText(reminderStatus)}
-                </ThemedText>
-                {getDaysRemaining(expireDate) !== null && getDaysRemaining(expireDate) >= 0 && (
-                  <ThemedText style={styles.daysText}>
-                    {getDaysRemaining(expireDate)} days remaining
-                  </ThemedText>
-                )}
+                <View style={styles.statusContent}>
+                  <Ionicons 
+                    name={getStatusIcon(reminderStatus)} 
+                    size={20} 
+                    color="white" 
+                    style={styles.statusIcon}
+                  />
+                  <View style={styles.statusTextContainer}>
+                    <ThemedText style={styles.statusText}>
+                      {getStatusText(reminderStatus)}
+                    </ThemedText>
+                    {getDaysRemaining(expireDate) !== null && getDaysRemaining(expireDate) >= 0 && (
+                      <ThemedText style={styles.daysText}>
+                        {getDaysRemaining(expireDate)} days remaining
+                      </ThemedText>
+                    )}
+                  </View>
+                </View>
               </View>
             )}
 
             {/* License Form */}
             <ThemedView style={[styles.card, { backgroundColor: theme.card }]}>
-              <ThemedText style={[styles.cardTitle, { color: theme.text }]}>
-                License Details
-              </ThemedText>
-
-              <View style={styles.inputSection}>
-                <ThemedText style={[styles.label, { color: theme.text }]}>
-                  License Number *
-                </ThemedText>
-                <TextInput
-                  style={[styles.input, {
-                    borderColor: theme.border,
-                    color: theme.text,
-                    backgroundColor: theme.background
-                  }]}
-                  value={licenseNumber}
-                  onChangeText={setLicenseNumber}
-                  placeholder="Enter license number"
-                  placeholderTextColor={theme.textMuted}
-                />
-              </View>
-
-              <View style={styles.inputSection}>
-                <ThemedText style={[styles.label, { color: theme.text }]}>
-                  Issuing Authority
-                </ThemedText>
-                <TextInput
-                  style={[styles.input, {
-                    borderColor: theme.border,
-                    color: theme.text,
-                    backgroundColor: theme.background
-                  }]}
-                  value={issuingAuthority}
-                  onChangeText={setIssuingAuthority}
-                  placeholder="e.g., DMV, Transport Department"
-                  placeholderTextColor={theme.textMuted}
-                />
-              </View>
-
-              <View style={styles.inputSection}>
-                <ThemedText style={[styles.label, { color: theme.text }]}>
-                  License Issue Date *
-                </ThemedText>
-                <TextInput
-                  style={[styles.input, {
-                    borderColor: theme.border,
-                    color: theme.text,
-                    backgroundColor: theme.background
-                  }]}
-                  value={startDate}
-                  onChangeText={setStartDate}
-                  placeholder="YYYY-MM-DD (e.g., 2024-01-15)"
-                  placeholderTextColor={theme.textMuted}
-                  maxLength={10}
-                />
-                <ThemedText style={[styles.dateDisplay, { color: theme.textMuted }]}>
-                  {formatDateForDisplay(startDate)}
+              <View style={[styles.cardHeader, { borderBottomColor: theme.border + '30' }]}>
+                <Ionicons name="card" size={24} color={theme.primary} />
+                <ThemedText style={[styles.cardTitle, { color: theme.text }]}>
+                  License Details
                 </ThemedText>
               </View>
 
-              <View style={styles.inputSection}>
-                <ThemedText style={[styles.label, { color: theme.text }]}>
-                  License Expiry Date *
-                </ThemedText>
-                <TextInput
-                  style={[styles.input, {
-                    borderColor: theme.border,
-                    color: theme.text,
-                    backgroundColor: theme.background
-                  }]}
-                  value={expireDate}
-                  onChangeText={(text) => {
-                    setExpireDate(text);
-                    if (text.length === 10 && isValidDate(text)) {
-                      setTimeout(() => checkExpirationStatus(text, 'license'), 300);
-                    } else {
-                      setReminderStatus('');
-                    }
-                  }}
-                  placeholder="YYYY-MM-DD (e.g., 2025-01-15)"
-                  placeholderTextColor={theme.textMuted}
-                  maxLength={10}
-                />
-                <ThemedText style={[styles.dateDisplay, { color: theme.textMuted }]}>
-                  {formatDateForDisplay(expireDate)}
-                </ThemedText>
+              <View style={styles.formContainer}>
+                {/* License Number */}
+                <View style={styles.inputSection}>
+                  <ThemedText style={[styles.label, { color: theme.text }]}>
+                    License Number *
+                  </ThemedText>
+                  <View style={[styles.inputWrapper, { 
+                    borderColor: theme.border, 
+                    backgroundColor: theme.background + '50' 
+                  }]}>
+                    <Ionicons 
+                      name="document-text" 
+                      size={20} 
+                      color={theme.textMuted} 
+                      style={styles.inputIcon}
+                    />
+                    <TextInput
+                      style={[styles.input, { color: theme.text }]}
+                      value={licenseNumber}
+                      onChangeText={setLicenseNumber}
+                      placeholder="Enter license number"
+                      placeholderTextColor={theme.textMuted}
+                    />
+                  </View>
+                </View>
+
+                {/* Issuing Authority */}
+                <View style={styles.inputSection}>
+                  <ThemedText style={[styles.label, { color: theme.text }]}>
+                    Issuing Authority
+                  </ThemedText>
+                  <View style={[styles.inputWrapper, { 
+                    borderColor: theme.border, 
+                    backgroundColor: theme.background + '50' 
+                  }]}>
+                    <Ionicons 
+                      name="business" 
+                      size={20} 
+                      color={theme.textMuted} 
+                      style={styles.inputIcon}
+                    />
+                    <TextInput
+                      style={[styles.input, { color: theme.text }]}
+                      value={issuingAuthority}
+                      onChangeText={setIssuingAuthority}
+                      placeholder="e.g., DMV, Transport Department"
+                      placeholderTextColor={theme.textMuted}
+                    />
+                  </View>
+                </View>
+
+                {/* Date Section */}
+                <View style={styles.dateSection}>
+                  {/* License Issue Date */}
+                  <View style={[styles.inputSection, styles.halfWidth]}>
+                    <ThemedText style={[styles.label, { color: theme.text }]}>
+                      Issue Date *
+                    </ThemedText>
+                    <View style={[styles.inputWrapper, { 
+                      borderColor: theme.border, 
+                      backgroundColor: theme.background + '50' 
+                    }]}>
+                      <Ionicons 
+                        name="calendar" 
+                        size={20} 
+                        color={theme.textMuted} 
+                        style={styles.inputIcon}
+                      />
+                      <TextInput
+                        style={[styles.input, { color: theme.text }]}
+                        value={startDate}
+                        onChangeText={setStartDate}
+                        placeholder="YYYY-MM-DD"
+                        placeholderTextColor={theme.textMuted}
+                        maxLength={10}
+                      />
+                    </View>
+                    <ThemedText style={[styles.dateDisplay, { color: theme.textMuted }]}>
+                      {formatDateForDisplay(startDate)}
+                    </ThemedText>
+                  </View>
+
+                  {/* License Expiry Date */}
+                  <View style={[styles.inputSection, styles.halfWidth]}>
+                    <ThemedText style={[styles.label, { color: theme.text }]}>
+                      Expiry Date *
+                    </ThemedText>
+                    <View style={[styles.inputWrapper, { 
+                      borderColor: theme.border, 
+                      backgroundColor: theme.background + '50' 
+                    }]}>
+                      <Ionicons 
+                        name="calendar" 
+                        size={20} 
+                        color={theme.textMuted} 
+                        style={styles.inputIcon}
+                      />
+                      <TextInput
+                        style={[styles.input, { color: theme.text }]}
+                        value={expireDate}
+                        onChangeText={(text) => {
+                          setExpireDate(text);
+                          if (text.length === 10 && isValidDate(text)) {
+                            setTimeout(() => checkExpirationStatus(text, 'license'), 300);
+                          } else {
+                            setReminderStatus('');
+                          }
+                        }}
+                        placeholder="YYYY-MM-DD"
+                        placeholderTextColor={theme.textMuted}
+                        maxLength={10}
+                      />
+                    </View>
+                    <ThemedText style={[styles.dateDisplay, { color: theme.textMuted }]}>
+                      {formatDateForDisplay(expireDate)}
+                    </ThemedText>
+                  </View>
+                </View>
+
+                {/* Reminder Days */}
+                <View style={styles.inputSection}>
+                  <ThemedText style={[styles.label, { color: theme.text }]}>
+                    Reminder Days Before Expiry
+                  </ThemedText>
+                  <View style={[styles.inputWrapper, { 
+                    borderColor: theme.border, 
+                    backgroundColor: theme.background + '50' 
+                  }]}>
+                    <Ionicons 
+                      name="notifications" 
+                      size={20} 
+                      color={theme.textMuted} 
+                      style={styles.inputIcon}
+                    />
+                    <TextInput
+                      style={[styles.input, { color: theme.text }]}
+                      value={reminderDays}
+                      onChangeText={setReminderDays}
+                      placeholder="30"
+                      keyboardType="numeric"
+                      placeholderTextColor={theme.textMuted}
+                    />
+                  </View>
+                </View>
               </View>
 
-              <View style={styles.inputSection}>
-                <ThemedText style={[styles.label, { color: theme.text }]}>
-                  Reminder Days Before Expiry
-                </ThemedText>
-                <TextInput
-                  style={[styles.input, {
-                    borderColor: theme.border,
-                    color: theme.text,
-                    backgroundColor: theme.background
-                  }]}
-                  value={reminderDays}
-                  onChangeText={setReminderDays}
-                  placeholder="30"
-                  keyboardType="numeric"
-                  placeholderTextColor={theme.textMuted}
-                />
-              </View>
-
+              {/* Save Button */}
               <TouchableOpacity
                 style={[styles.saveButton, { backgroundColor: theme.primary }]}
                 onPress={saveLicenseData}
@@ -641,29 +747,52 @@ export default function LicenceScreen() {
                 {saving ? (
                   <ActivityIndicator size="small" color="white" />
                 ) : (
-                  <ThemedText style={styles.saveButtonText}>
-                    Save License Information
-                  </ThemedText>
+                  <>
+                    <Ionicons name="save" size={20} color="white" style={styles.buttonIcon} />
+                    <ThemedText style={styles.saveButtonText}>
+                      Save License Information
+                    </ThemedText>
+                  </>
                 )}
               </TouchableOpacity>
             </ThemedView>
 
             {/* License Quick Actions */}
             <ThemedView style={[styles.card, { backgroundColor: theme.card }]}>
-              <ThemedText style={[styles.cardTitle, { color: theme.text }]}>
-                Quick Actions
-              </ThemedText>
+              <View style={[styles.cardHeader, { borderBottomColor: theme.border + '30' }]}>
+                <Ionicons name="flash" size={24} color={theme.primary} />
+                <ThemedText style={[styles.cardTitle, { color: theme.text }]}>
+                  Quick Actions
+                </ThemedText>
+              </View>
 
               <TouchableOpacity
-                style={[styles.actionButton, { backgroundColor: theme.primary + '20', borderColor: theme.primary }]}
+                style={[styles.actionButton, { 
+                  backgroundColor: theme.primary + '20', 
+                  borderColor: theme.primary 
+                }]}
                 onPress={() => saveReminder(getDaysRemaining(expireDate), 'license')}
                 disabled={!expireDate || getDaysRemaining(expireDate) === null}
               >
+                <Ionicons 
+                  name="alarm" 
+                  size={20} 
+                  color={theme.primary} 
+                  style={styles.buttonIcon}
+                />
                 <ThemedText style={[styles.actionButtonText, { color: theme.primary }]}>
                   Set License Renewal Reminder
                 </ThemedText>
               </TouchableOpacity>
             </ThemedView>
+
+            {/* License Duration Info */}
+            <DurationInfo 
+              startDate={startDate}
+              expireDate={expireDate}
+              reminderStatus={reminderStatus}
+              title="License Duration"
+            />
           </>
         )}
 
@@ -673,158 +802,234 @@ export default function LicenceScreen() {
             {/* Insurance Status Display */}
             {insuranceReminderStatus && (
               <View style={[styles.statusBadge, { backgroundColor: getStatusColor(insuranceReminderStatus) }]}>
-                <ThemedText style={styles.statusText}>
-                  {getStatusText(insuranceReminderStatus)}
-                </ThemedText>
-                {getDaysRemaining(insuranceExpireDate) !== null && getDaysRemaining(insuranceExpireDate) >= 0 && (
-                  <ThemedText style={styles.daysText}>
-                    {getDaysRemaining(insuranceExpireDate)} days remaining
-                  </ThemedText>
-                )}
+                <View style={styles.statusContent}>
+                  <Ionicons 
+                    name={getStatusIcon(insuranceReminderStatus)} 
+                    size={20} 
+                    color="white" 
+                    style={styles.statusIcon}
+                  />
+                  <View style={styles.statusTextContainer}>
+                    <ThemedText style={styles.statusText}>
+                      {getStatusText(insuranceReminderStatus)}
+                    </ThemedText>
+                    {getDaysRemaining(insuranceExpireDate) !== null && getDaysRemaining(insuranceExpireDate) >= 0 && (
+                      <ThemedText style={styles.daysText}>
+                        {getDaysRemaining(insuranceExpireDate)} days remaining
+                      </ThemedText>
+                    )}
+                  </View>
+                </View>
               </View>
             )}
 
             {/* Insurance Form */}
             <ThemedView style={[styles.card, { backgroundColor: theme.card }]}>
-              <ThemedText style={[styles.cardTitle, { color: theme.text }]}>
-                Insurance Details
-              </ThemedText>
-
-              <View style={styles.inputSection}>
-                <ThemedText style={[styles.label, { color: theme.text }]}>
-                  Policy Number *
-                </ThemedText>
-                <TextInput
-                  style={[styles.input, {
-                    borderColor: theme.border,
-                    color: theme.text,
-                    backgroundColor: theme.background
-                  }]}
-                  value={insurancePolicyNumber}
-                  onChangeText={setInsurancePolicyNumber}
-                  placeholder="Enter policy number"
-                  placeholderTextColor={theme.textMuted}
-                />
-              </View>
-
-              <View style={styles.inputSection}>
-                <ThemedText style={[styles.label, { color: theme.text }]}>
-                  Insurance Provider *
-                </ThemedText>
-                <TextInput
-                  style={[styles.input, {
-                    borderColor: theme.border,
-                    color: theme.text,
-                    backgroundColor: theme.background
-                  }]}
-                  value={insuranceProvider}
-                  onChangeText={setInsuranceProvider}
-                  placeholder="e.g., State Farm, Geico, Progressive"
-                  placeholderTextColor={theme.textMuted}
-                />
-              </View>
-
-              <View style={styles.inputSection}>
-                <ThemedText style={[styles.label, { color: theme.text }]}>
-                  Coverage Type
-                </ThemedText>
-                <TextInput
-                  style={[styles.input, {
-                    borderColor: theme.border,
-                    color: theme.text,
-                    backgroundColor: theme.background
-                  }]}
-                  value={coverageType}
-                  onChangeText={setCoverageType}
-                  placeholder="e.g., Full Coverage, Liability, Comprehensive"
-                  placeholderTextColor={theme.textMuted}
-                />
-              </View>
-
-              <View style={styles.inputSection}>
-                <ThemedText style={[styles.label, { color: theme.text }]}>
-                  Premium Amount
-                </ThemedText>
-                <TextInput
-                  style={[styles.input, {
-                    borderColor: theme.border,
-                    color: theme.text,
-                    backgroundColor: theme.background
-                  }]}
-                  value={premiumAmount}
-                  onChangeText={setPremiumAmount}
-                  placeholder="e.g., $500/year, $50/month"
-                  placeholderTextColor={theme.textMuted}
-                />
-              </View>
-
-              <View style={styles.inputSection}>
-                <ThemedText style={[styles.label, { color: theme.text }]}>
-                  Insurance Start Date *
-                </ThemedText>
-                <TextInput
-                  style={[styles.input, {
-                    borderColor: theme.border,
-                    color: theme.text,
-                    backgroundColor: theme.background
-                  }]}
-                  value={insuranceStartDate}
-                  onChangeText={setInsuranceStartDate}
-                  placeholder="YYYY-MM-DD (e.g., 2024-01-15)"
-                  placeholderTextColor={theme.textMuted}
-                  maxLength={10}
-                />
-                <ThemedText style={[styles.dateDisplay, { color: theme.textMuted }]}>
-                  {formatDateForDisplay(insuranceStartDate)}
+              <View style={[styles.cardHeader, { borderBottomColor: theme.border + '30' }]}>
+                <Ionicons name="shield-checkmark" size={24} color={theme.primary} />
+                <ThemedText style={[styles.cardTitle, { color: theme.text }]}>
+                  Insurance Details
                 </ThemedText>
               </View>
 
-              <View style={styles.inputSection}>
-                <ThemedText style={[styles.label, { color: theme.text }]}>
-                  Insurance Expiry Date *
-                </ThemedText>
-                <TextInput
-                  style={[styles.input, {
-                    borderColor: theme.border,
-                    color: theme.text,
-                    backgroundColor: theme.background
-                  }]}
-                  value={insuranceExpireDate}
-                  onChangeText={(text) => {
-                    setInsuranceExpireDate(text);
-                    if (text.length === 10 && isValidDate(text)) {
-                      setTimeout(() => checkExpirationStatus(text, 'insurance'), 300);
-                    } else {
-                      setInsuranceReminderStatus('');
-                    }
-                  }}
-                  placeholder="YYYY-MM-DD (e.g., 2025-01-15)"
-                  placeholderTextColor={theme.textMuted}
-                  maxLength={10}
-                />
-                <ThemedText style={[styles.dateDisplay, { color: theme.textMuted }]}>
-                  {formatDateForDisplay(insuranceExpireDate)}
-                </ThemedText>
+              <View style={styles.formContainer}>
+                {/* Policy Number */}
+                <View style={styles.inputSection}>
+                  <ThemedText style={[styles.label, { color: theme.text }]}>
+                    Policy Number *
+                  </ThemedText>
+                  <View style={[styles.inputWrapper, { 
+                    borderColor: theme.border, 
+                    backgroundColor: theme.background + '50' 
+                  }]}>
+                    <Ionicons 
+                      name="document" 
+                      size={20} 
+                      color={theme.textMuted} 
+                      style={styles.inputIcon}
+                    />
+                    <TextInput
+                      style={[styles.input, { color: theme.text }]}
+                      value={insurancePolicyNumber}
+                      onChangeText={setInsurancePolicyNumber}
+                      placeholder="Enter policy number"
+                      placeholderTextColor={theme.textMuted}
+                    />
+                  </View>
+                </View>
+
+                {/* Insurance Provider */}
+                <View style={styles.inputSection}>
+                  <ThemedText style={[styles.label, { color: theme.text }]}>
+                    Insurance Provider *
+                  </ThemedText>
+                  <View style={[styles.inputWrapper, { 
+                    borderColor: theme.border, 
+                    backgroundColor: theme.background + '50' 
+                  }]}>
+                    <Ionicons 
+                      name="business" 
+                      size={20} 
+                      color={theme.textMuted} 
+                      style={styles.inputIcon}
+                    />
+                    <TextInput
+                      style={[styles.input, { color: theme.text }]}
+                      value={insuranceProvider}
+                      onChangeText={setInsuranceProvider}
+                      placeholder="e.g., State Farm, Geico, Progressive"
+                      placeholderTextColor={theme.textMuted}
+                    />
+                  </View>
+                </View>
+
+                {/* Coverage Type and Premium Amount */}
+                <View style={styles.dateSection}>
+                  <View style={[styles.inputSection, styles.halfWidth]}>
+                    <ThemedText style={[styles.label, { color: theme.text }]}>
+                      Coverage Type
+                    </ThemedText>
+                    <View style={[styles.inputWrapper, { 
+                      borderColor: theme.border, 
+                      backgroundColor: theme.background + '50' 
+                    }]}>
+                      <Ionicons 
+                        name="umbrella" 
+                        size={20} 
+                        color={theme.textMuted} 
+                        style={styles.inputIcon}
+                      />
+                      <TextInput
+                        style={[styles.input, { color: theme.text }]}
+                        value={coverageType}
+                        onChangeText={setCoverageType}
+                        placeholder="Full Coverage"
+                        placeholderTextColor={theme.textMuted}
+                      />
+                    </View>
+                  </View>
+
+                  <View style={[styles.inputSection, styles.halfWidth]}>
+                    <ThemedText style={[styles.label, { color: theme.text }]}>
+                      Premium Amount
+                    </ThemedText>
+                    <View style={[styles.inputWrapper, { 
+                      borderColor: theme.border, 
+                      backgroundColor: theme.background + '50' 
+                    }]}>
+                      <Ionicons 
+                        name="cash" 
+                        size={20} 
+                        color={theme.textMuted} 
+                        style={styles.inputIcon}
+                      />
+                      <TextInput
+                        style={[styles.input, { color: theme.text }]}
+                        value={premiumAmount}
+                        onChangeText={setPremiumAmount}
+                        placeholder="$500/year"
+                        placeholderTextColor={theme.textMuted}
+                      />
+                    </View>
+                  </View>
+                </View>
+
+                {/* Date Section */}
+                <View style={styles.dateSection}>
+                  {/* Insurance Start Date */}
+                  <View style={[styles.inputSection, styles.halfWidth]}>
+                    <ThemedText style={[styles.label, { color: theme.text }]}>
+                      Start Date *
+                    </ThemedText>
+                    <View style={[styles.inputWrapper, { 
+                      borderColor: theme.border, 
+                      backgroundColor: theme.background + '50' 
+                    }]}>
+                      <Ionicons 
+                        name="calendar" 
+                        size={20} 
+                        color={theme.textMuted} 
+                        style={styles.inputIcon}
+                      />
+                      <TextInput
+                        style={[styles.input, { color: theme.text }]}
+                        value={insuranceStartDate}
+                        onChangeText={setInsuranceStartDate}
+                        placeholder="YYYY-MM-DD"
+                        placeholderTextColor={theme.textMuted}
+                        maxLength={10}
+                      />
+                    </View>
+                    <ThemedText style={[styles.dateDisplay, { color: theme.textMuted }]}>
+                      {formatDateForDisplay(insuranceStartDate)}
+                    </ThemedText>
+                  </View>
+
+                  {/* Insurance Expiry Date */}
+                  <View style={[styles.inputSection, styles.halfWidth]}>
+                    <ThemedText style={[styles.label, { color: theme.text }]}>
+                      Expiry Date *
+                    </ThemedText>
+                    <View style={[styles.inputWrapper, { 
+                      borderColor: theme.border, 
+                      backgroundColor: theme.background + '50' 
+                    }]}>
+                      <Ionicons 
+                        name="calendar" 
+                        size={20} 
+                        color={theme.textMuted} 
+                        style={styles.inputIcon}
+                      />
+                      <TextInput
+                        style={[styles.input, { color: theme.text }]}
+                        value={insuranceExpireDate}
+                        onChangeText={(text) => {
+                          setInsuranceExpireDate(text);
+                          if (text.length === 10 && isValidDate(text)) {
+                            setTimeout(() => checkExpirationStatus(text, 'insurance'), 300);
+                          } else {
+                            setInsuranceReminderStatus('');
+                          }
+                        }}
+                        placeholder="YYYY-MM-DD"
+                        placeholderTextColor={theme.textMuted}
+                        maxLength={10}
+                      />
+                    </View>
+                    <ThemedText style={[styles.dateDisplay, { color: theme.textMuted }]}>
+                      {formatDateForDisplay(insuranceExpireDate)}
+                    </ThemedText>
+                  </View>
+                </View>
+
+                {/* Reminder Days */}
+                <View style={styles.inputSection}>
+                  <ThemedText style={[styles.label, { color: theme.text }]}>
+                    Reminder Days Before Expiry
+                  </ThemedText>
+                  <View style={[styles.inputWrapper, { 
+                    borderColor: theme.border, 
+                    backgroundColor: theme.background + '50' 
+                  }]}>
+                    <Ionicons 
+                      name="notifications" 
+                      size={20} 
+                      color={theme.textMuted} 
+                      style={styles.inputIcon}
+                    />
+                    <TextInput
+                      style={[styles.input, { color: theme.text }]}
+                      value={insuranceReminderDays}
+                      onChangeText={setInsuranceReminderDays}
+                      placeholder="30"
+                      keyboardType="numeric"
+                      placeholderTextColor={theme.textMuted}
+                    />
+                  </View>
+                </View>
               </View>
 
-              <View style={styles.inputSection}>
-                <ThemedText style={[styles.label, { color: theme.text }]}>
-                  Reminder Days Before Expiry
-                </ThemedText>
-                <TextInput
-                  style={[styles.input, {
-                    borderColor: theme.border,
-                    color: theme.text,
-                    backgroundColor: theme.background
-                  }]}
-                  value={insuranceReminderDays}
-                  onChangeText={setInsuranceReminderDays}
-                  placeholder="30"
-                  keyboardType="numeric"
-                  placeholderTextColor={theme.textMuted}
-                />
-              </View>
-
+              {/* Save Button */}
               <TouchableOpacity
                 style={[styles.saveButton, { backgroundColor: theme.primary }]}
                 onPress={saveInsuranceData}
@@ -833,29 +1038,52 @@ export default function LicenceScreen() {
                 {saving ? (
                   <ActivityIndicator size="small" color="white" />
                 ) : (
-                  <ThemedText style={styles.saveButtonText}>
-                    Save Insurance Information
-                  </ThemedText>
+                  <>
+                    <Ionicons name="save" size={20} color="white" style={styles.buttonIcon} />
+                    <ThemedText style={styles.saveButtonText}>
+                      Save Insurance Information
+                    </ThemedText>
+                  </>
                 )}
               </TouchableOpacity>
             </ThemedView>
 
             {/* Insurance Quick Actions */}
             <ThemedView style={[styles.card, { backgroundColor: theme.card }]}>
-              <ThemedText style={[styles.cardTitle, { color: theme.text }]}>
-                Quick Actions
-              </ThemedText>
+              <View style={[styles.cardHeader, { borderBottomColor: theme.border + '30' }]}>
+                <Ionicons name="flash" size={24} color={theme.primary} />
+                <ThemedText style={[styles.cardTitle, { color: theme.text }]}>
+                  Quick Actions
+                </ThemedText>
+              </View>
 
               <TouchableOpacity
-                style={[styles.actionButton, { backgroundColor: theme.primary + '20', borderColor: theme.primary }]}
+                style={[styles.actionButton, { 
+                  backgroundColor: theme.primary + '20', 
+                  borderColor: theme.primary 
+                }]}
                 onPress={() => saveReminder(getDaysRemaining(insuranceExpireDate), 'insurance')}
                 disabled={!insuranceExpireDate || getDaysRemaining(insuranceExpireDate) === null}
               >
+                <Ionicons 
+                  name="alarm" 
+                  size={20} 
+                  color={theme.primary} 
+                  style={styles.buttonIcon}
+                />
                 <ThemedText style={[styles.actionButtonText, { color: theme.primary }]}>
                   Set Insurance Renewal Reminder
                 </ThemedText>
               </TouchableOpacity>
             </ThemedView>
+
+            {/* Insurance Duration Info */}
+            <DurationInfo 
+              startDate={insuranceStartDate}
+              expireDate={insuranceExpireDate}
+              reminderStatus={insuranceReminderStatus}
+              title="Insurance Duration"
+            />
           </>
         )}
       </ScrollView>
@@ -864,9 +1092,9 @@ export default function LicenceScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
+  scrollContainer: {
     padding: 16,
+    paddingBottom: 30,
   },
   centered: {
     flex: 1,
@@ -941,10 +1169,19 @@ const styles = StyleSheet.create({
     marginLeft: 8,
   },
   statusBadge: {
-    padding: 12,
-    borderRadius: 8,
+    padding: 16,
+    borderRadius: 12,
     marginBottom: 20,
+  },
+  statusContent: {
+    flexDirection: 'row',
     alignItems: 'center',
+  },
+  statusIcon: {
+    marginRight: 12,
+  },
+  statusTextContainer: {
+    flex: 1,
   },
   statusText: {
     color: 'white',
@@ -966,10 +1203,20 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.1,
     shadowRadius: 4,
   },
+  cardHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 20,
+    paddingBottom: 15,
+    borderBottomWidth: 1,
+  },
   cardTitle: {
     fontSize: 18,
     fontWeight: '600',
-    marginBottom: 16,
+    marginLeft: 12,
+  },
+  formContainer: {
+    marginBottom: 20,
   },
   inputSection: {
     marginBottom: 20,
@@ -979,21 +1226,41 @@ const styles = StyleSheet.create({
     fontWeight: '500',
     marginBottom: 8,
   },
-  input: {
+  inputWrapper: {
+    flexDirection: 'row',
+    alignItems: 'center',
     borderWidth: 1,
-    borderRadius: 8,
-    padding: 12,
+    borderRadius: 12,
+    paddingHorizontal: 12,
+    minHeight: 48,
+  },
+  inputIcon: {
+    marginRight: 10,
+  },
+  input: {
+    flex: 1,
     fontSize: 16,
-    marginBottom: 4,
+    paddingVertical: 12,
+  },
+  dateSection: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    gap: 12,
+  },
+  halfWidth: {
+    flex: 1,
   },
   dateDisplay: {
     fontSize: 14,
     fontStyle: 'italic',
+    marginTop: 4,
   },
   saveButton: {
-    padding: 16,
-    borderRadius: 8,
+    flexDirection: 'row',
     alignItems: 'center',
+    justifyContent: 'center',
+    padding: 16,
+    borderRadius: 12,
     marginTop: 10,
   },
   saveButtonText: {
@@ -1002,14 +1269,22 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
   actionButton: {
-    padding: 16,
-    borderRadius: 8,
+    flexDirection: 'row',
     alignItems: 'center',
+    justifyContent: 'center',
+    padding: 16,
+    borderRadius: 12,
     borderWidth: 1,
-    marginBottom: 10,
   },
   actionButtonText: {
     fontSize: 16,
     fontWeight: '600',
+  },
+  buttonIcon: {
+    marginRight: 8,
+  },
+  durationText: {
+    fontSize: 14,
+    marginBottom: 4,
   },
 });

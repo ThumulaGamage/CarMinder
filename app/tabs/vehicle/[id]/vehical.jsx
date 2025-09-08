@@ -2,7 +2,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { doc, getDoc } from 'firebase/firestore';
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import {
   ActivityIndicator,
   Image,
@@ -280,30 +280,28 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '600',
   },
-  buttonsSection: {
-    margin: 20,
-    padding: 20,
-    borderRadius: 20,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 6,
-    elevation: 3,
-    gap: 15,
+   buttonsSection: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    gap:50
   },
   actionButton: {
-    flexDirection: 'row',
+    width: 100,  // Fixed width
+    height: 100, // Same as width for square
+    flexDirection: 'column', // Stack icon and text vertically
     alignItems: 'center',
     justifyContent: 'center',
-    paddingVertical: 16,
-    paddingHorizontal: 24,
-    borderRadius: 12,
-    gap: 12,
+    borderRadius: 12, // Rounded corners
+    gap: 10, // Space between icon and text
   },
   actionButtonText: {
     color: 'white',
-    fontSize: 16,
+    fontSize: 15,
     fontWeight: '600',
+    textAlign: 'center',
   },
   centered: {
     flex: 1,

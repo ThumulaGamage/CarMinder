@@ -6,6 +6,7 @@ import {
   Alert,
   Dimensions,
   FlatList,
+  Image, // Added Image import
   StyleSheet,
   Text,
   TouchableOpacity,
@@ -20,7 +21,11 @@ const { width } = Dimensions.get('window');
 export default function HomeTab() {
   const [vehicles, setVehicles] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [userInfo, setUserInfo] = useState({ name: '', email: '' });
+  const [userInfo, setUserInfo] = useState({ 
+    name: '', 
+    email: '', 
+    profilePicture: null // Added profile picture state
+  });
   const router = useRouter();
   const theme = useTheme();
 
@@ -39,18 +44,18 @@ export default function HomeTab() {
       // Get user info from Firebase Auth
       const userEmail = user.email || '';
       let userName = user.displayName || '';
+      let profilePicture = null;
 
-      // If no display name, try to get from Firestore
-      if (!userName) {
-        try {
-          const userDoc = await db.collection('users').doc(user.uid).get();
-          if (userDoc.exists) {
-            const userData = userDoc.data();
-            userName = userData.name || userData.displayName || '';
-          }
-        } catch (error) {
-          console.log('No user document found, using email');
+      // Try to get user details from Firestore
+      try {
+        const userDoc = await db.collection('users').doc(user.uid).get();
+        if (userDoc.exists) {
+          const userData = userDoc.data();
+          userName = userData.name || userData.displayName || userName;
+          profilePicture = userData.profilePicture || null; // Get profile picture
         }
+      } catch (error) {
+        console.log('No user document found, using email');
       }
 
       // If still no name, extract from email
@@ -58,7 +63,11 @@ export default function HomeTab() {
         userName = userEmail.split('@')[0];
       }
 
-      setUserInfo({ name: userName, email: userEmail });
+      setUserInfo({ 
+        name: userName, 
+        email: userEmail, 
+        profilePicture: profilePicture 
+      });
     } catch (error) {
       console.error('Error loading user info:', error);
     }
@@ -170,6 +179,28 @@ export default function HomeTab() {
       .slice(0, 2);
   };
 
+  // Updated UserAvatar component to handle profile picture
+  const UserAvatar = () => {
+    if (userInfo.profilePicture) {
+      return (
+        <Image 
+          source={{ uri: userInfo.profilePicture }} 
+          style={styles.userAvatarImage}
+          onError={() => {
+            // If image fails to load, fall back to initials
+            setUserInfo(prev => ({ ...prev, profilePicture: null }));
+          }}
+        />
+      );
+    }
+
+    return (
+      <View style={[styles.userAvatar, { backgroundColor: theme.primary }]}>
+        <Text style={styles.userInitials}>{getInitials(userInfo.name)}</Text>
+      </View>
+    );
+  };
+
   if (loading) {
     return (
       <View style={[styles.loadingContainer, { backgroundColor: theme.background }]}>
@@ -182,12 +213,10 @@ export default function HomeTab() {
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: theme.background }}>
       <View style={[styles.container, { backgroundColor: theme.background }]}>
-        {/* User Header */}
+        {/* User Header with Profile Picture */}
         <View style={[styles.userHeader, { backgroundColor: theme.card }]}>
           <View style={styles.userInfo}>
-            <View style={[styles.userAvatar, { backgroundColor: theme.primary }]}>
-              <Text style={styles.userInitials}>{getInitials(userInfo.name)}</Text>
-            </View>
+            <UserAvatar />
             <View style={styles.userDetails}>
               <Text style={[styles.userName, { color: theme.text }]}>
                 {userInfo.name || 'User'}
@@ -317,6 +346,14 @@ export default function HomeTab() {
 }
 
 const styles = StyleSheet.create({
+
+   userAvatarImage: {
+    width: 50,
+    height: 50,
+    borderRadius: 25,
+    backgroundColor: '#f0f0f0', // fallback background color
+  },
+  
   container: {
     flex: 1,
   },
@@ -332,219 +369,274 @@ const styles = StyleSheet.create({
   },
   userHeader: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
     alignItems: 'center',
+    justifyContent: 'space-between',
     paddingHorizontal: 20,
     paddingVertical: 16,
+    marginBottom: 8,
+    borderRadius: 12,
+    marginHorizontal: 16,
+    marginTop: 8,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
   },
+
   userInfo: {
     flexDirection: 'row',
     alignItems: 'center',
     flex: 1,
   },
+
   userAvatar: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
+    width: 50,
+    height: 50,
+    borderRadius: 25,
     justifyContent: 'center',
     alignItems: 'center',
     marginRight: 12,
   },
+
   userInitials: {
     fontSize: 18,
     fontWeight: 'bold',
-    color: 'white',
+    color: '#fff',
   },
+
   userDetails: {
     flex: 1,
   },
+
   userName: {
     fontSize: 18,
-    fontWeight: 'bold',
+    fontWeight: '600',
     marginBottom: 2,
   },
+
   userEmail: {
     fontSize: 14,
-    fontWeight: '400',
   },
-  notificationButton: {
-    padding: 8,
-  },
+
   signOutButton: {
     padding: 8,
-    borderRadius: 20,
+    borderRadius: 8,
   },
-  header: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingHorizontal: 20,
-    paddingTop: 20,
-    paddingBottom: 24,
-    borderBottomWidth: 1,
-  },
-  headerContent: {
+
+ loadingContainer: {
     flex: 1,
-  },
-  headerTitle: {
-    fontSize: 28,
-    fontWeight: 'bold',
-    marginBottom: 4,
-  },
-  headerSubtitle: {
-    fontSize: 16,
-    fontWeight: '400',
-  },
-  headerIcon: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
     justifyContent: 'center',
     alignItems: 'center',
   },
-  listContainer: {
-    padding: 16,
+
+  loadingText: {
+    marginTop: 16,
+    fontSize: 16,
   },
+
+  container: {
+    flex: 1,
+  },
+
+  header: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: 20,
+    paddingVertical: 16,
+    marginBottom: 8,
+    borderBottomWidth: 1,
+  },
+
+  headerContent: {
+    flex: 1,
+  },
+
+  headerTitle: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    marginBottom: 4,
+  },
+
+  headerSubtitle: {
+    fontSize: 14,
+  },
+
+  headerIcon: {
+    width: 60,
+    height: 60,
+    borderRadius: 30,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+
+  listContainer: {
+    paddingHorizontal: 16,
+    paddingBottom: 100,
+  },
+
+  emptyListContainer: {
+    flex: 1,
+    paddingHorizontal: 16,
+  },
+
   vehicleCard: {
     flexDirection: 'row',
-    borderRadius: 16,
-    padding: 20,
-    marginBottom: 16,
     alignItems: 'center',
+    padding: 16,
+    marginBottom: 12,
+    borderRadius: 12,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
-    shadowRadius: 8,
-    elevation: 4,
+    shadowRadius: 4,
+    elevation: 3,
   },
+
   vehicleIconContainer: {
     alignItems: 'center',
     marginRight: 16,
   },
+
   iconWrapper: {
-    width: 56,
-    height: 56,
-    borderRadius: 28,
+    width: 50,
+    height: 50,
+    borderRadius: 25,
     justifyContent: 'center',
     alignItems: 'center',
-    marginBottom: 8,
+    marginBottom: 4,
   },
+
   vehicleType: {
     fontSize: 12,
-    fontWeight: '600',
-    textTransform: 'uppercase',
-    letterSpacing: 0.5,
+    textTransform: 'capitalize',
   },
+
   vehicleDetails: {
     flex: 1,
-    marginRight: 12,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
   },
+
   vehicleMainInfo: {
     flex: 1,
   },
+
   vehicleModel: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    marginBottom: 8,
+    fontSize: 16,
+    fontWeight: '600',
+    marginBottom: 4,
   },
+
   plateContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 6,
+    marginBottom: 2,
   },
+
   plateNumber: {
-    fontSize: 16,
-    fontWeight: '600',
+    fontSize: 14,
     marginLeft: 6,
     paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 6,
-    overflow: 'hidden',
+    paddingVertical: 2,
+    borderRadius: 4,
+    fontWeight: '500',
   },
+
   yearContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginTop: 4,
   },
+
   vehicleYear: {
-    fontSize: 14,
+    fontSize: 12,
     marginLeft: 4,
   },
+
   conditionBadge: {
     paddingHorizontal: 12,
     paddingVertical: 6,
-    borderRadius: 20,
+    borderRadius: 12,
     alignSelf: 'flex-start',
-    marginTop: 8,
   },
+
   conditionText: {
     fontSize: 12,
     fontWeight: '600',
-    color: 'white',
+    color: '#fff',
     textTransform: 'capitalize',
   },
+
   arrowContainer: {
-    padding: 8,
+    marginLeft: 12,
   },
-  emptyListContainer: {
-    flex: 1,
-  },
+
   emptyContainer: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    paddingHorizontal: 32,
-    paddingVertical: 64,
+    paddingHorizontal: 40,
+    paddingTop: 60,
   },
+
   emptyIconContainer: {
-    width: 140,
-    height: 140,
-    borderRadius: 70,
+    width: 150,
+    height: 150,
+    borderRadius: 75,
     justifyContent: 'center',
     alignItems: 'center',
-    marginBottom: 32,
+    marginBottom: 24,
   },
+
   emptyTitle: {
     fontSize: 24,
     fontWeight: 'bold',
-    marginBottom: 16,
+    marginBottom: 12,
     textAlign: 'center',
   },
+
   emptyDescription: {
     fontSize: 16,
     textAlign: 'center',
     lineHeight: 24,
     marginBottom: 32,
   },
+
   primaryButton: {
     flexDirection: 'row',
-    paddingHorizontal: 32,
-    paddingVertical: 16,
-    borderRadius: 16,
     alignItems: 'center',
+    paddingHorizontal: 24,
+    paddingVertical: 16,
+    borderRadius: 12,
+    shadowColor: '#000',
     shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 8,
-    elevation: 6,
+    shadowOpacity: 0.2,
+    shadowRadius: 6,
+    elevation: 5,
   },
+
   primaryButtonText: {
     color: 'white',
     fontSize: 16,
     fontWeight: '600',
     marginLeft: 8,
   },
+
   floatingButton: {
     position: 'absolute',
-    bottom: 32,
-    right: 24,
-    width: 64,
-    height: 64,
-    borderRadius: 32,
+    right: 20,
+    bottom: 30,
+    width: 60,
+    height: 60,
+    borderRadius: 30,
     justifyContent: 'center',
     alignItems: 'center',
+    shadowColor: '#000',
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.3,
-    shadowRadius: 8,
+    shadowRadius: 6,
     elevation: 8,
   },
 });

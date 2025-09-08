@@ -3,6 +3,7 @@ import 'firebase/compat/auth';
 import 'firebase/compat/firestore'; // <-- Add this
 
 
+
 const firebaseConfig = {
   apiKey: "AIzaSyBjs5vNSmJK_E7nYzt1NFt94z2cRGcLzxE",
   authDomain: "carminder-f0fe1.firebaseapp.com",

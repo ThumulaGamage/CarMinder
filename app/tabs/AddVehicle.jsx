@@ -1,5 +1,4 @@
 import { Ionicons } from '@expo/vector-icons';
-import { Picker } from '@react-native-picker/picker';
 import { useRouter } from 'expo-router';
 import { useState } from 'react';
 import {
@@ -22,21 +21,11 @@ import ThemedView from '../../components/ThemedView';
 
 const { width } = Dimensions.get('window');
 
-// Custom Vehicle Type Picker Component
-const CustomVehicleTypePicker = ({ value, onValueChange, enabled = true, theme }) => {
+// Reusable Custom Picker Component
+const CustomPicker = ({ value, onValueChange, enabled = true, theme, placeholder, data, title }) => {
   const [modalVisible, setModalVisible] = useState(false);
-  
-  const vehicleTypes = [
-    { label: 'Car', value: 'Car', icon: 'car' },
-    { label: 'Van', value: 'Van', icon: 'car-outline' },
-    { label: 'Bike', value: 'Bike', icon: 'bicycle' },
-    { label: 'Truck', value: 'Truck', icon: 'car-sport' },
-    { label: 'Bus', value: 'Bus', icon: 'bus' },
-    { label: 'Three Wheeler', value: 'Three Wheeler', icon: 'car-outline' },
-    { label: 'Other', value: 'Other', icon: 'ellipsis-horizontal' }
-  ];
 
-  const selectedType = vehicleTypes.find(type => type.value === value);
+  const selectedItem = data.find(item => item.value === value);
 
   const selectItem = (item) => {
     onValueChange(item.value);
@@ -59,9 +48,9 @@ const CustomVehicleTypePicker = ({ value, onValueChange, enabled = true, theme }
         activeOpacity={0.8}
       >
         <View style={customPickerStyles.pickerContent}>
-          {selectedType?.icon && (
+          {selectedItem?.icon && (
             <Ionicons 
-              name={selectedType.icon} 
+              name={selectedItem.icon} 
               size={20} 
               color={theme.primary} 
               style={customPickerStyles.pickerIcon}
@@ -71,7 +60,7 @@ const CustomVehicleTypePicker = ({ value, onValueChange, enabled = true, theme }
             customPickerStyles.pickerText,
             { color: value ? theme.text : theme.textMuted }
           ]}>
-            {selectedType ? selectedType.label : 'Select Vehicle Type'}
+            {selectedItem ? selectedItem.label : placeholder}
           </ThemedText>
         </View>
         <Ionicons 
@@ -99,7 +88,7 @@ const CustomVehicleTypePicker = ({ value, onValueChange, enabled = true, theme }
           ]}>
             <View style={customPickerStyles.modalHeader}>
               <ThemedText style={[customPickerStyles.modalTitle, { color: theme.text }]}>
-                Select Vehicle Type
+                {title}
               </ThemedText>
               <TouchableOpacity
                 onPress={() => setModalVisible(false)}
@@ -110,7 +99,7 @@ const CustomVehicleTypePicker = ({ value, onValueChange, enabled = true, theme }
             </View>
             
             <FlatList
-              data={vehicleTypes}
+              data={data}
               keyExtractor={(item) => item.value}
               renderItem={({ item }) => (
                 <TouchableOpacity
@@ -124,12 +113,14 @@ const CustomVehicleTypePicker = ({ value, onValueChange, enabled = true, theme }
                   onPress={() => selectItem(item)}
                   activeOpacity={0.7}
                 >
-                  <Ionicons 
-                    name={item.icon} 
-                    size={24} 
-                    color={value === item.value ? theme.primary : theme.textMuted}
-                    style={customPickerStyles.modalItemIcon}
-                  />
+                  {item.icon && (
+                    <Ionicons 
+                      name={item.icon} 
+                      size={24} 
+                      color={value === item.value ? theme.primary : theme.textMuted}
+                      style={customPickerStyles.modalItemIcon}
+                    />
+                  )}
                   <ThemedText style={[
                     customPickerStyles.modalItemText,
                     { 
@@ -148,6 +139,7 @@ const CustomVehicleTypePicker = ({ value, onValueChange, enabled = true, theme }
                   )}
                 </TouchableOpacity>
               )}
+              showsVerticalScrollIndicator={false}
             />
           </View>
         </TouchableOpacity>
@@ -220,7 +212,7 @@ export default function AddVehicle() {
     registerYear: '',
     fuelType: '',
     engineCapacity: '',
-    mileage: '', // Added mileage field
+    mileage: '',
     color: '',
     plate: '',
     chassisNumber: '',
@@ -228,14 +220,51 @@ export default function AddVehicle() {
     condition: ''
   });
 
-  // Dropdown options
-  const fuelTypes = ['Petrol', 'Diesel', 'Electric', 'Hybrid'];
-  const colors = ['White', 'Black', 'Silver', 'Red', 'Blue', 'Gray', 'Brown', 'Green', 'Yellow', 'Other'];
-  const conditions = ['Excellent', 'Good', 'Fair', 'Poor'];
+  // Data for dropdowns
+  const vehicleTypes = [
+    { label: 'Car', value: 'Car', icon: 'car' },
+    { label: 'Van', value: 'Van', icon: 'car-outline' },
+    { label: 'Bike', value: 'Bike', icon: 'bicycle' },
+    { label: 'Truck', value: 'Truck', icon: 'car-sport' },
+    { label: 'Bus', value: 'Bus', icon: 'bus' },
+    { label: 'Three Wheeler', value: 'Three Wheeler', icon: 'car-outline' },
+    { label: 'Other', value: 'Other', icon: 'ellipsis-horizontal' }
+  ];
+
+  const fuelTypes = [
+    { label: 'Petrol', value: 'Petrol', icon: 'water' },
+    { label: 'Diesel', value: 'Diesel', icon: 'water-outline' },
+    { label: 'Electric', value: 'Electric', icon: 'flash' },
+    { label: 'Hybrid', value: 'Hybrid', icon: 'leaf' }
+  ];
+
+  const colors = [
+    { label: 'White', value: 'White', icon: 'ellipse' },
+    { label: 'Black', value: 'Black', icon: 'ellipse' },
+    { label: 'Silver', value: 'Silver', icon: 'ellipse' },
+    { label: 'Red', value: 'Red', icon: 'ellipse' },
+    { label: 'Blue', value: 'Blue', icon: 'ellipse' },
+    { label: 'Gray', value: 'Gray', icon: 'ellipse' },
+    { label: 'Brown', value: 'Brown', icon: 'ellipse' },
+    { label: 'Green', value: 'Green', icon: 'ellipse' },
+    { label: 'Yellow', value: 'Yellow', icon: 'ellipse' },
+    { label: 'Other', value: 'Other', icon: 'color-palette' }
+  ];
+
+  const conditions = [
+    { label: 'Excellent', value: 'Excellent', icon: 'star' },
+    { label: 'Good', value: 'Good', icon: 'star-half' },
+    { label: 'Fair', value: 'Fair', icon: 'star-outline' },
+    { label: 'Poor', value: 'Poor', icon: 'warning' }
+  ];
 
   // Generate year arrays
   const currentYear = new Date().getFullYear();
-  const years = Array.from({ length: 50 }, (_, i) => currentYear - i);
+  const years = Array.from({ length: 50 }, (_, i) => ({
+    label: (currentYear - i).toString(),
+    value: (currentYear - i).toString(),
+    icon: 'calendar'
+  }));
 
   // Custom alert function
   const showAlert = (title, message, buttons) => {
@@ -507,41 +536,6 @@ export default function AddVehicle() {
       elevation: 1,
     },
 
-    inputFocused: {
-      borderColor: theme.primary,
-      shadowColor: theme.primary,
-      shadowOffset: {
-        width: 0,
-        height: 2,
-      },
-      shadowOpacity: 0.2,
-      shadowRadius: 4,
-      elevation: 3,
-    },
-
-    pickerContainer: {
-      borderWidth: 1.5,
-      borderColor: theme.border,
-      borderRadius: 12,
-      backgroundColor: theme.inputBackground || theme.card,
-      overflow: 'hidden',
-      shadowColor: '#000',
-      shadowOffset: {
-        width: 0,
-        height: 1,
-      },
-      shadowOpacity: 0.05,
-      shadowRadius: 2,
-      elevation: 1,
-    },
-
-    picker: {
-      height: 56,
-      color: theme.text,
-      fontSize: 16,
-      fontWeight: '500',
-    },
-
     // Button Styles
     buttonContainer: {
       flexDirection: 'row',
@@ -672,13 +666,16 @@ export default function AddVehicle() {
         {/* Basic Information Section */}
         {renderFormSection("Basic Information", 
           <>
-            {/* Vehicle Type - Required - CUSTOM PICKER */}
+            {/* Vehicle Type - Required */}
             {renderFormField("Vehicle Type", 
-              <CustomVehicleTypePicker
+              <CustomPicker
                 value={newVehicle.type}
                 onValueChange={(value) => setNewVehicle(prev => ({ ...prev, type: value }))}
                 enabled={!saving}
                 theme={theme}
+                placeholder="Select Vehicle Type"
+                data={vehicleTypes}
+                title="Select Vehicle Type"
               />, 
               true
             )}
@@ -715,39 +712,29 @@ export default function AddVehicle() {
             <View style={themedStyles.formRow}>
               <View style={themedStyles.formGroupHalf}>
                 {renderFormField("Manufacture Year", 
-                  <View style={themedStyles.pickerContainer}>
-                    <Picker
-                      selectedValue={newVehicle.manufactureYear}
-                      onValueChange={(value) => setNewVehicle(prev => ({ ...prev, manufactureYear: value }))}
-                      enabled={!saving}
-                      style={themedStyles.picker}
-                      itemStyle={{ color: theme.text }}
-                    >
-                      <Picker.Item label="Select Year" value="" />
-                      {years.map(year => (
-                        <Picker.Item key={year} label={year.toString()} value={year.toString()} />
-                      ))}
-                    </Picker>
-                  </View>
+                  <CustomPicker
+                    value={newVehicle.manufactureYear}
+                    onValueChange={(value) => setNewVehicle(prev => ({ ...prev, manufactureYear: value }))}
+                    enabled={!saving}
+                    theme={theme}
+                    placeholder="Select Year"
+                    data={years}
+                    title="Select Manufacture Year"
+                  />
                 )}
               </View>
 
               <View style={themedStyles.formGroupHalf}>
                 {renderFormField("Register Year", 
-                  <View style={themedStyles.pickerContainer}>
-                    <Picker
-                      selectedValue={newVehicle.registerYear}
-                      onValueChange={(value) => setNewVehicle(prev => ({ ...prev, registerYear: value }))}
-                      enabled={!saving}
-                      style={themedStyles.picker}
-                      itemStyle={{ color: theme.text }}
-                    >
-                      <Picker.Item label="Select Year" value="" />
-                      {years.map(year => (
-                        <Picker.Item key={year} label={year.toString()} value={year.toString()} />
-                      ))}
-                    </Picker>
-                  </View>
+                  <CustomPicker
+                    value={newVehicle.registerYear}
+                    onValueChange={(value) => setNewVehicle(prev => ({ ...prev, registerYear: value }))}
+                    enabled={!saving}
+                    theme={theme}
+                    placeholder="Select Year"
+                    data={years}
+                    title="Select Register Year"
+                  />
                 )}
               </View>
             </View>
@@ -761,20 +748,15 @@ export default function AddVehicle() {
             <View style={themedStyles.formRow}>
               <View style={themedStyles.formGroupHalf}>
                 {renderFormField("Fuel Type", 
-                  <View style={themedStyles.pickerContainer}>
-                    <Picker
-                      selectedValue={newVehicle.fuelType}
-                      onValueChange={(value) => setNewVehicle(prev => ({ ...prev, fuelType: value }))}
-                      enabled={!saving}
-                      style={themedStyles.picker}
-                      itemStyle={{ color: theme.text }}
-                    >
-                      <Picker.Item label="Select Fuel Type" value="" />
-                      {fuelTypes.map(fuel => (
-                        <Picker.Item key={fuel} label={fuel} value={fuel} />
-                      ))}
-                    </Picker>
-                  </View>
+                  <CustomPicker
+                    value={newVehicle.fuelType}
+                    onValueChange={(value) => setNewVehicle(prev => ({ ...prev, fuelType: value }))}
+                    enabled={!saving}
+                    theme={theme}
+                    placeholder="Select Fuel Type"
+                    data={fuelTypes}
+                    title="Select Fuel Type"
+                  />
                 )}
               </View>
 
@@ -809,40 +791,30 @@ export default function AddVehicle() {
 
               <View style={themedStyles.formGroupHalf}>
                 {renderFormField("Color", 
-                  <View style={themedStyles.pickerContainer}>
-                    <Picker
-                      selectedValue={newVehicle.color}
-                      onValueChange={(value) => setNewVehicle(prev => ({ ...prev, color: value }))}
-                      enabled={!saving}
-                      style={themedStyles.picker}
-                      itemStyle={{ color: theme.text }}
-                    >
-                      <Picker.Item label="Select Color" value="" />
-                      {colors.map(color => (
-                        <Picker.Item key={color} label={color} value={color} />
-                      ))}
-                    </Picker>
-                  </View>
+                  <CustomPicker
+                    value={newVehicle.color}
+                    onValueChange={(value) => setNewVehicle(prev => ({ ...prev, color: value }))}
+                    enabled={!saving}
+                    theme={theme}
+                    placeholder="Select Color"
+                    data={colors}
+                    title="Select Color"
+                  />
                 )}
               </View>
             </View>
 
             {/* Condition */}
             {renderFormField("Condition", 
-              <View style={themedStyles.pickerContainer}>
-                <Picker
-                  selectedValue={newVehicle.condition}
-                  onValueChange={(value) => setNewVehicle(prev => ({ ...prev, condition: value }))}
-                  enabled={!saving}
-                  style={themedStyles.picker}
-                  itemStyle={{ color: theme.text }}
-                >
-                  <Picker.Item label="Select Condition" value="" />
-                  {conditions.map(condition => (
-                    <Picker.Item key={condition} label={condition} value={condition} />
-                  ))}
-                </Picker>
-              </View>
+              <CustomPicker
+                value={newVehicle.condition}
+                onValueChange={(value) => setNewVehicle(prev => ({ ...prev, condition: value }))}
+                enabled={!saving}
+                theme={theme}
+                placeholder="Select Condition"
+                data={conditions}
+                title="Select Condition"
+              />
             )}
           </>
         )}

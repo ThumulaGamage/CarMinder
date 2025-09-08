@@ -100,63 +100,85 @@ const VehicleDetailScreen = () => {
   }
 
   return (
-   
-         
-      <ScrollView 
-        style={{ flex: 1 }}
-        contentContainerStyle={styles.scrollContainer}
-        showsVerticalScrollIndicator={false}
+    <ScrollView 
+      style={{ flex: 1 }}
+      contentContainerStyle={styles.scrollContainer}
+      showsVerticalScrollIndicator={false}
+    >
+      {/* Vehicle Image/Icon Section */}
+      <LinearGradient
+        colors={[theme.primary + '20', theme.background]}
+        style={styles.vehicleHeader}
       >
-        {/* Vehicle Image/Icon Section */}
-        <LinearGradient
-          colors={[theme.primary + '20', theme.background]}
-          style={styles.vehicleHeader}
-        >
-          {vehicle.imageUrl ? (
-            <Image
-              source={{ uri: vehicle.imageUrl }}
-              style={styles.vehicleImage}
-              resizeMode="contain"
+        {vehicle.imageUrl ? (
+          <Image
+            source={{ uri: vehicle.imageUrl }}
+            style={styles.vehicleImage}
+            resizeMode="contain"
+          />
+        ) : (
+          <View style={[styles.iconContainer, { backgroundColor: theme.primary + '20' }]}>
+            <Ionicons
+              name={getVehicleIcon(vehicle.type)}
+              size={80}
+              color={theme.primary}
             />
-          ) : (
-            <View style={[styles.iconContainer, { backgroundColor: theme.primary + '20' }]}>
-              <Ionicons
-                name={getVehicleIcon(vehicle.type)}
-                size={80}
-                color={theme.primary}
-              />
-            </View>
-          )}
-          <View style={styles.vehicleInfo}>
-            <Text style={[styles.modelName, { color: theme.text }]}>
-              {vehicle.brand} {vehicle.model}
-            </Text>
-            <Text style={[styles.modelType, { color: theme.textMuted }]}>
-              {vehicle.type} • {vehicle.plate}
-            </Text>
           </View>
-        </LinearGradient>
-
-        {/* Details Section */}
-        <View style={[styles.detailsSection, { backgroundColor: theme.card }]}>
-          <Text style={[styles.sectionTitle, { color: theme.text }]}>Specifications</Text>
-          
-          <View style={styles.detailsGrid}>
-            <InfoItem label="Color" value={vehicle.color} theme={theme} />
-            <InfoItem label="Fuel Type" value={vehicle.fuelType} theme={theme} />
-            <InfoItem label="Engine" value={vehicle.engineCapacity} theme={theme} />
-            <InfoItem label="Chassis No." value={vehicle.chassisNumber} theme={theme} />
-            <InfoItem label="Registered" value={vehicle.registerYear} theme={theme} />
-            <InfoItem label="Manufactured" value={vehicle.manufactureYear} theme={theme} />
-            <InfoItem label="Condition" value={vehicle.condition} theme={theme} />
-            <InfoItem label="Mileage" value={vehicle.mileage ? `${vehicle.mileage} km` : null} theme={theme} />
-          </View>
+        )}
+        <View style={styles.vehicleInfo}>
+          <Text style={[styles.modelName, { color: theme.text }]}>
+            {vehicle.brand} {vehicle.model}
+          </Text>
+          <Text style={[styles.modelType, { color: theme.textMuted }]}>
+            {vehicle.type} • {vehicle.plate}
+          </Text>
         </View>
+      </LinearGradient>
 
-        {/* Additional space at bottom */}
-        <View style={{ height: 30 }} />
-      </ScrollView>
-    
+      {/* Details Section */}
+      <View style={[styles.detailsSection, { backgroundColor: theme.card }]}>
+        <Text style={[styles.sectionTitle, { color: theme.text }]}>Specifications</Text>
+        
+        <View style={styles.detailsGrid}>
+          <InfoItem label="Color" value={vehicle.color} theme={theme} />
+          <InfoItem label="Fuel Type" value={vehicle.fuelType} theme={theme} />
+          <InfoItem label="Engine" value={vehicle.engineCapacity} theme={theme} />
+          <InfoItem label="Chassis No." value={vehicle.chassisNumber} theme={theme} />
+          <InfoItem label="Registered" value={vehicle.registerYear} theme={theme} />
+          <InfoItem label="Manufactured" value={vehicle.manufactureYear} theme={theme} />
+          <InfoItem label="Condition" value={vehicle.condition} theme={theme} />
+          <InfoItem label="Mileage" value={vehicle.mileage ? `${vehicle.mileage} km` : null} theme={theme} />
+        </View>
+      </View>
+
+      {/* Action Buttons Section */}
+      <View style={[styles.buttonsSection, { backgroundColor: theme.card }]}>
+        <TouchableOpacity
+          style={[styles.actionButton, { backgroundColor: theme.primary }]}
+          onPress={() => {
+            console.log('Navigating to Service Records with vehicle ID:', vehicle.id);
+            router.push(`/tabs/vehicle/${vehicle.id}/service`);
+          }}
+        >
+          <Ionicons name="construct-outline" size={24} color="white" />
+          <Text style={styles.actionButtonText}>Service Records</Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          style={[styles.actionButton, { backgroundColor: theme.primary }]}
+          onPress={() => {
+            console.log('Navigating to Documents with vehicle ID:', vehicle.id);
+            router.push(`/tabs/vehicle/${vehicle.id}/licence`);
+          }}
+        >
+          <Ionicons name="document-text-outline" size={24} color="white" />
+          <Text style={styles.actionButtonText}>Documents</Text>
+        </TouchableOpacity>
+      </View>
+
+      {/* Additional space at bottom */}
+      <View style={{ height: 30 }} />
+    </ScrollView>
   );
 };
 
@@ -255,6 +277,31 @@ const styles = StyleSheet.create({
     opacity: 0.7,
   },
   infoValue: {
+    fontSize: 16,
+    fontWeight: '600',
+  },
+  buttonsSection: {
+    margin: 20,
+    padding: 20,
+    borderRadius: 20,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 6,
+    elevation: 3,
+    gap: 15,
+  },
+  actionButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 16,
+    paddingHorizontal: 24,
+    borderRadius: 12,
+    gap: 12,
+  },
+  actionButtonText: {
+    color: 'white',
     fontSize: 16,
     fontWeight: '600',
   },

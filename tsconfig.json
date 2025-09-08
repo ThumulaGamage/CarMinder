@@ -1,0 +1,17 @@
+{
+  "extends": "expo/tsconfig.base",
+  "compilerOptions": {
+    "strict": true,
+    "paths": {
+      "@/*": [
+        "./*"
+      ]
+    }
+  },
+  "include": [
+    "**/*.ts",
+    "**/*.tsx",
+    ".expo/types/**/*.ts",
+    "expo-env.d.ts"
+, "app/tabs/vehicle/[id]/service.jsx", "app/tabs/vehicle/[id]/licence.jsx", "app/tabs/vehicle/[id]/vehical.jsx"  ]
+}

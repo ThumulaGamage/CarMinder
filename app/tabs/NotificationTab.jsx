@@ -216,7 +216,10 @@ export default function NotificationTab() {
                 nextDue: licenseData.expireDate,
                 daysOverdue: status.daysOverdue || 0,
                 daysUntilDue: status.daysUntilDue || 0,
-                onPress: () => router.push(`/tabs/vehicle/${vehicle.id}/Vehicle Documents?tab=license`)
+                onPress: () => {
+                  console.log('Navigating to license for vehicle:', vehicle.id);
+                  router.push(`/tabs/vehicle/${vehicle.id}/Vehicle Documents?tab=license`);
+                }
               };
 
               // Categorize based on status
@@ -260,7 +263,10 @@ export default function NotificationTab() {
                 nextDue: insuranceData.expireDate,
                 daysOverdue: status.daysOverdue || 0,
                 daysUntilDue: status.daysUntilDue || 0,
-                onPress: () => router.push(`/tabs/vehicle/${vehicle.id}/Vehicle Documents?tab=insurance`)
+                onPress: () => {
+                  console.log('Navigating to insurance for vehicle:', vehicle.id);
+                  router.push(`/tabs/vehicle/${vehicle.id}/Vehicle Documents?tab=insurance`);
+                }
               };
 
               // Categorize based on status
@@ -335,7 +341,10 @@ export default function NotificationTab() {
               daysOverdue: status.daysOverdue || 0,
               daysUntilDue: status.daysUntilDue || 0,
               serviceField: service.field,
-              onPress: () => router.push(`/tabs/vehicle/${vehicle.id}/service_records/service_ongoing`)
+              onPress: () => {
+                console.log('Navigating to service ongoing for vehicle:', vehicle.id);
+                router.push(`/tabs/vehicle/${vehicle.id}/Vehicle Details`);
+              }
             };
 
             // Categorize
@@ -401,7 +410,10 @@ export default function NotificationTab() {
               daysOverdue: status.daysOverdue || 0,
               daysUntilDue: status.daysUntilDue || 0,
               serviceField: service.field,
-              onPress: () => router.push(`/tabs/vehicle/${vehicle.id}/service_records/service_ongoing`)
+              onPress: () => {
+                console.log('Navigating to service ongoing for vehicle:', vehicle.id);
+                router.push(`/tabs/vehicle/${vehicle.id}/service_records/service_ongoing`);
+              }
             };
 
             // Categorize
@@ -604,7 +616,12 @@ export default function NotificationTab() {
     const colors = getPriorityColors(notification.priority);
     
     return (
-      <View key={notification.id} style={[styles.notificationCard, { borderLeftColor: colors.border }]}>
+      <TouchableOpacity 
+        key={notification.id} 
+        style={[styles.notificationCard, { borderLeftColor: colors.border }]}
+        onPress={notification.onPress}
+        activeOpacity={0.7}
+      >
         <View style={styles.cardHeader}>
           <View style={styles.cardTitleRow}>
             <View style={[styles.iconContainer, { backgroundColor: getServiceIconColor(notification.icon) + '20' }]}>
@@ -628,6 +645,12 @@ export default function NotificationTab() {
                 <Text style={styles.categoryText}>SVC</Text>
               </View>
             )}
+            <Ionicons 
+              name="chevron-forward" 
+              size={16} 
+              color="#9CA3AF" 
+              style={styles.chevronIcon}
+            />
           </View>
         </View>
 
@@ -654,13 +677,19 @@ export default function NotificationTab() {
               <>
                 <TouchableOpacity 
                   style={styles.primaryButton}
-                  onPress={() => handleMarkDone(notification)}
+                  onPress={(e) => {
+                    e.stopPropagation();
+                    handleMarkDone(notification);
+                  }}
                 >
                   <Text style={styles.primaryButtonText}>Mark as Done</Text>
                 </TouchableOpacity>
                 <TouchableOpacity 
                   style={styles.secondaryButton}
-                  onPress={() => handleSnooze(notification)}
+                  onPress={(e) => {
+                    e.stopPropagation();
+                    handleSnooze(notification);
+                  }}
                 >
                   <Text style={styles.secondaryButtonText}>Snooze</Text>
                 </TouchableOpacity>
@@ -668,14 +697,19 @@ export default function NotificationTab() {
             ) : (
               <TouchableOpacity 
                 style={styles.fullButton}
-                onPress={() => handleSnooze(notification)}
+                onPress={(e) => {
+                  e.stopPropagation();
+                  handleSnooze(notification);
+                }}
               >
                 <Text style={styles.fullButtonText}>Set Reminder</Text>
               </TouchableOpacity>
             )}
           </View>
+
+          <Text style={styles.tapHint}>Tap to view details</Text>
         </View>
-      </View>
+      </TouchableOpacity>
     );
   };
 
@@ -1041,6 +1075,13 @@ const styles = StyleSheet.create({
   },
   chevronIcon: {
     marginLeft: 8,
+  },
+  tapHint: {
+    fontSize: 11,
+    color: '#9CA3AF',
+    textAlign: 'center',
+    marginTop: 4,
+    fontStyle: 'italic',
   },
   summaryContainer: {
     borderTopWidth: 1,

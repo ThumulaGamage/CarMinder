@@ -190,7 +190,7 @@ export default function SignUp() {
         <ThemedView style={styles.formContainer}>
           <ThemedText style={[styles.title, { color: theme.primary }]}>Create Account</ThemedText>
 
-          {/* Debug info */}
+          {/* Debug info 
           <View style={styles.debugContainer}>
             <ThemedText style={styles.debugText}>
               Auth Status: {isAuthenticated ? '✅ Signed In' : '❌ Not Signed In'}
@@ -203,7 +203,7 @@ export default function SignUp() {
                 User: {user.email}
               </ThemedText>
             )}
-          </View>
+          </View>*/}
 
           <ThemedTextInput 
             placeholder="Full Name" 

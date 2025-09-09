@@ -485,17 +485,24 @@ export default function LicenceScreen() {
 
   return (
     
-    
-      <ScrollView 
-        style={{ flex: 1 }}
-        contentContainerStyle={[styles.scrollContainer, { backgroundColor: theme.background }]}
-        showsVerticalScrollIndicator={false}
-      >
+    <SafeAreaView style={{ flex: 1, backgroundColor: theme.background }}>
+      
         {/* Vehicle Header Section */}
         <LinearGradient
           colors={[theme.primary + '20', theme.background]}
           style={styles.vehicleHeader}
         >
+          <View style={styles.headerContent}>
+                    <TouchableOpacity onPress={() => router.back()} style={styles.headerButton}>
+                      <Ionicons name="arrow-back" size={24} color='#FFFFFF' />
+                    </TouchableOpacity>
+                    <Text style={[styles.headerTitle, { color: theme.text }]}>
+                      Vehicle Documents
+                    </Text>
+                  
+                  </View>
+
+
           <View style={[styles.iconContainer, { backgroundColor: theme.primary + '20' }]}>
             <Ionicons
               name={getVehicleIcon(vehicle.type)}
@@ -555,6 +562,12 @@ export default function LicenceScreen() {
             </ThemedText>
           </TouchableOpacity>
         </View>
+
+        <ScrollView 
+        style={{ flex: 1 }}
+        contentContainerStyle={[styles.scrollContainer, { backgroundColor: theme.background }]}
+        showsVerticalScrollIndicator={false}
+      >
 
         {/* License Tab Content */}
         {activeTab === 'license' && (
@@ -1087,6 +1100,7 @@ export default function LicenceScreen() {
           </>
         )}
       </ScrollView>
+      </SafeAreaView>
     
   );
 }
@@ -1095,6 +1109,41 @@ const styles = StyleSheet.create({
   scrollContainer: {
     padding: 16,
     paddingBottom: 30,
+  },
+    header: {
+    paddingBottom: 20,
+    
+
+  },
+  headerContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: 1,
+    paddingTop: 1,
+    
+  },
+    headerButton: {
+    padding: 12,
+    paddingHorizontal: 16,
+    borderRadius: 25,
+    backgroundColor: '#0088ffff', // iOS blue or use your theme color
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3, // Android shadow
+    alignItems: 'center',
+    justifyContent: 'center',
+    minWidth: 44, // iOS recommended touch target
+    minHeight: 44,
+  },
+  headerTitle: {
+    fontSize: 24,
+    fontWeight: '800',
+    flex: 1,
+    textAlign: 'center',
+    
   },
   centered: {
     flex: 1,
@@ -1127,6 +1176,7 @@ const styles = StyleSheet.create({
     borderBottomLeftRadius: 20,
     borderBottomRightRadius: 20,
     marginBottom: 20,
+    marginTop: 0,
   },
   iconContainer: {
     width: 100,
@@ -1135,9 +1185,12 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     marginBottom: 15,
+    marginTop: 15,
   },
   vehicleInfo: {
     alignItems: 'center',
+    marginBottom: -30,
+    marginTop: -10,
   },
   modelName: {
     fontSize: 20,
@@ -1152,7 +1205,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     borderRadius: 12,
     padding: 4,
-    marginBottom: 20,
+    marginBottom: 1,
   },
   tab: {
     flex: 1,

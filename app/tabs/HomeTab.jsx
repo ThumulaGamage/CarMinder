@@ -214,14 +214,14 @@ export default function HomeTab() {
     <SafeAreaView style={{ flex: 1, backgroundColor: theme.background }}>
       <View style={[styles.container, { backgroundColor: theme.background }]}>
         {/* User Header with Profile Picture */}
-        <View style={[styles.userHeader, { backgroundColor: theme.card }]}>
+        <View style={[styles.userHeader, { backgroundColor: theme.card2 }]}>
           <View style={styles.userInfo}>
             <UserAvatar />
             <View style={styles.userDetails}>
-              <Text style={[styles.userName, { color: theme.text }]}>
+              <Text style={[styles.userName, { color: theme.text2 }]}>
                 {userInfo.name || 'User'}
               </Text>
-              <Text style={[styles.userEmail, { color: theme.textMuted }]}>
+              <Text style={[styles.userEmail, { color: theme.text2 }]}>
                 {userInfo.email}
               </Text>
             </View>
@@ -231,15 +231,15 @@ export default function HomeTab() {
             onPress={handleSignOut}
             activeOpacity={0.7}
           >
-            <Ionicons name="log-out-outline" size={24} color={theme.text} />
+            <Ionicons name="log-out-outline" size={50} color='#D32F2F' />
           </TouchableOpacity>
         </View>
 
         {/* Vehicle Header */}
-        <View style={[styles.header, { backgroundColor: theme.card, borderBottomColor: theme.border || '#ddd' }]}>
+        <View style={[styles.header, { backgroundColor: theme.card3, borderBottomColor: theme.border || '#ddd' }]}>
           <View style={styles.headerContent}>
-            <Text style={[styles.headerTitle, { color: theme.text }]}>My Vehicles</Text>
-            <Text style={[styles.headerSubtitle, { color: theme.textMuted || '#666' }]}>
+            <Text style={[styles.headerTitle, { color: theme.text3 }]}>My Vehicles</Text>
+            <Text style={[styles.headerSubtitle, { color: theme.text3 || '#666' }]}>
               {vehicles.length} {vehicles.length === 1 ? 'Vehicle' : 'Vehicles'}
             </Text>
           </View>
@@ -255,7 +255,7 @@ export default function HomeTab() {
             <TouchableOpacity
               onPress={() => {
                 console.log('Navigating with vehicle ID:', item.id);
-                router.push(`/tabs/vehicle/${item.id}/vehical`);
+                router.push(`/tabs/vehicle/${item.id}/Vehicle Details`);
               }}
               onLongPress={() => handleDeleteVehicle(item.id, item)}
               style={[styles.vehicleCard, { backgroundColor: theme.card }]}
@@ -348,10 +348,11 @@ export default function HomeTab() {
 const styles = StyleSheet.create({
 
    userAvatarImage: {
-    width: 50,
-    height: 50,
-    borderRadius: 25,
-    backgroundColor: '#f0f0f0', // fallback background color
+    width: 80,
+    height: 80,
+    borderRadius:50,
+    backgroundColor: '#f0f0f0', 
+    marginRight:10// fallback background color
   },
   
   container: {
@@ -374,9 +375,11 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     paddingVertical: 16,
     marginBottom: 8,
-    borderRadius: 12,
+    borderRadius: 0,
     marginHorizontal: 16,
     marginTop: 8,
+    marginLeft:0,
+    marginRight:0,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
@@ -391,7 +394,7 @@ const styles = StyleSheet.create({
   },
 
   userAvatar: {
-    width: 50,
+    width: 30,
     height: 50,
     borderRadius: 25,
     justifyContent: 'center',
@@ -447,6 +450,9 @@ const styles = StyleSheet.create({
     paddingVertical: 16,
     marginBottom: 8,
     borderBottomWidth: 1,
+    marginLeft:10,
+    marginRight:10,
+    borderRadius: 5,
   },
 
   headerContent: {

@@ -70,6 +70,41 @@ const VehicleDetailScreen = () => {
     fetchVehicle();
   }, [selectedVehicleId]);
 
+  const handleEdit = () => {
+    router.push({
+      pathname: '/tabs/vehicle/${vehicle.id}/options/edit_specifications',
+      params: { vehicleId: selectedVehicleId }
+    });
+  };
+
+  const handleUpdateMileage = () => {
+    router.push({
+      pathname: '/tabs/vehicle/${vehicle.id}/options/mileage_update',
+      params: { vehicleId: selectedVehicleId }
+    });
+  };
+
+  const handleAddSpecs = () => {
+    router.push({
+      pathname: '/tabs/vehicle/${vehicle.id}/service_records/service_ongoing',
+      params: { vehicleId: selectedVehicleId }
+    });
+  };
+
+  const handleServiceRecords = () => {
+    console.log('Navigating to Service Records with vehicle ID:', vehicle.id);
+    // Connected to service_ongoing as requested
+    router.push({
+      pathname: '/tabs/vehicle/${vehicle.id}/service_records/service_ongoing',
+      params: { vehicleId: selectedVehicleId }
+    });
+  };
+
+  const handleDocuments = () => {
+    console.log('Navigating to Documents with vehicle ID:', vehicle.id);
+    router.push(`/tabs/vehicle/${vehicle.id}/Vehicle Documents`);
+  };
+
   if (loading) {
     return (
       <SafeAreaView style={{ flex: 1, backgroundColor: theme.background }}>
@@ -100,16 +135,25 @@ const VehicleDetailScreen = () => {
   }
 
   return (
-    <ScrollView 
-      style={{ flex: 1 }}
-      contentContainerStyle={styles.scrollContainer}
-      showsVerticalScrollIndicator={false}
-    >
+    <SafeAreaView style={{ flex: 1, backgroundColor: theme.background }}>
+    
+
+      
       {/* Vehicle Image/Icon Section */}
       <LinearGradient
         colors={[theme.primary + '20', theme.background]}
         style={styles.vehicleHeader}
       >
+        <View style={styles.headerContent}>
+                            <TouchableOpacity onPress={() => router.push('../../../homepage')} style={styles.headerButton}>
+  <Ionicons name="home" size={24} color='#FFFFFF' />
+</TouchableOpacity>
+                            <Text style={[styles.headerTitle1, { color: theme.text }]}>
+                              Vehicle Details
+                            </Text>
+                          
+                          </View>
+        
         {vehicle.imageUrl ? (
           <Image
             source={{ uri: vehicle.imageUrl }}
@@ -135,9 +179,25 @@ const VehicleDetailScreen = () => {
         </View>
       </LinearGradient>
 
-      {/* Details Section */}
+      <ScrollView 
+      style={{ flex: 1 }}
+      contentContainerStyle={styles.scrollContainer}
+      showsVerticalScrollIndicator={false}
+    >
+
+      {/* Details Section with Edit Button */}
       <View style={[styles.detailsSection, { backgroundColor: theme.card }]}>
-        <Text style={[styles.sectionTitle, { color: theme.text }]}>Specifications</Text>
+        {/* Section Header with Edit Button */}
+        <View style={styles.sectionHeader}>
+          <Text style={[styles.sectionTitle, { color: theme.text }]}>Specifications</Text>
+          <TouchableOpacity 
+            style={[styles.editButton, { backgroundColor: theme.primary + '20' }]}
+            onPress={handleEdit}
+          >
+            <Ionicons name="pencil" size={16} color={theme.primary} />
+            <Text style={[styles.editButtonText, { color: theme.primary }]}>Edit</Text>
+          </TouchableOpacity>
+        </View>
         
         <View style={styles.detailsGrid}>
           <InfoItem label="Color" value={vehicle.color} theme={theme} />
@@ -151,34 +211,42 @@ const VehicleDetailScreen = () => {
         </View>
       </View>
 
-      {/* Action Buttons Section */}
+      {/* Update Mileage and Add Specs Buttons (Friend's Features) */}
+      <View style={styles.actionButtonsContainer}>
+        <TouchableOpacity
+          style={[styles.actionButton, styles.updateMileageButton, { backgroundColor: theme.primary }]}
+          onPress={handleUpdateMileage}
+        >
+          <Ionicons name="speedometer" size={20} color="white" style={styles.buttonIcon} />
+          <Text style={styles.actionButtonText}>Update Mileage</Text>
+        </TouchableOpacity>
+
+     
+      </View>
+
+      {/* Service Records and Documents Buttons (Your Original Features) */}
       <View style={[styles.buttonsSection, { backgroundColor: theme.card }]}>
         <TouchableOpacity
-          style={[styles.actionButton, { backgroundColor: theme.primary }]}
-          onPress={() => {
-            console.log('Navigating to Service Records with vehicle ID:', vehicle.id);
-            router.push(`/tabs/vehicle/${vehicle.id}/service`);
-          }}
+          style={[styles.squareActionButton, { backgroundColor: theme.primary }]}
+          onPress={handleServiceRecords}
         >
           <Ionicons name="construct-outline" size={24} color="white" />
-          <Text style={styles.actionButtonText}>Service Records</Text>
+          <Text style={styles.squareActionButtonText}>Service Records</Text>
         </TouchableOpacity>
 
         <TouchableOpacity
-          style={[styles.actionButton, { backgroundColor: theme.primary }]}
-          onPress={() => {
-            console.log('Navigating to Documents with vehicle ID:', vehicle.id);
-            router.push(`/tabs/vehicle/${vehicle.id}/licence`);
-          }}
+          style={[styles.squareActionButton, { backgroundColor: theme.primary }]}
+          onPress={handleDocuments}
         >
           <Ionicons name="document-text-outline" size={24} color="white" />
-          <Text style={styles.actionButtonText}>Documents</Text>
+          <Text style={styles.squareActionButtonText}>Documents</Text>
         </TouchableOpacity>
       </View>
 
       {/* Additional space at bottom */}
       <View style={{ height: 30 }} />
     </ScrollView>
+    </SafeAreaView>
   );
 };
 
@@ -202,6 +270,35 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     borderBottomColor: 'rgba(0,0,0,0.05)',
   },
+ 
+  headerContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: 1,
+    paddingTop: 1,
+  },
+    headerButton: {
+    padding: 12,
+    paddingHorizontal: 16,
+    borderRadius: 25,
+    backgroundColor: '#0088ffff', // iOS blue or use your theme color
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3, // Android shadow
+    alignItems: 'center',
+    justifyContent: 'center',
+    minWidth: 44, // iOS recommended touch target
+    minHeight: 44,
+  },
+  headerTitle1: {
+    fontSize: 24,
+    fontWeight: '800',
+    flex: 1,
+    textAlign: 'center',
+  },
   backButton: {
     padding: 8,
     borderRadius: 20,
@@ -221,12 +318,13 @@ const styles = StyleSheet.create({
     borderBottomRightRadius: 30,
   },
   iconContainer: {
-    width: 150,
-    height: 150,
+    width: 100,
+    height: 100,
     borderRadius: 75,
     justifyContent: 'center',
     alignItems: 'center',
-    marginBottom: 15,
+    marginBottom: 0,
+    marginTop: 20,
   },
   vehicleImage: {
     width: 200,
@@ -236,6 +334,7 @@ const styles = StyleSheet.create({
   vehicleInfo: {
     alignItems: 'center',
     marginTop: 10,
+    
   },
   modelName: {
     fontSize: 24,
@@ -255,11 +354,29 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.1,
     shadowRadius: 6,
     elevation: 3,
+    marginTop: -10,
+  },
+  sectionHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 20,
   },
   sectionTitle: {
     fontSize: 18,
     fontWeight: '600',
-    marginBottom: 20,
+  },
+  editButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 8,
+  },
+  editButtonText: {
+    fontSize: 14,
+    fontWeight: '600',
+    marginLeft: 4,
   },
   detailsGrid: {
     flexDirection: 'row',
@@ -280,15 +397,50 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '600',
   },
-   buttonsSection: {
+  // Friend's Action Buttons (Update Mileage & Add Specs)
+  actionButtonsContainer: {
+    paddingHorizontal: 20,
+    marginTop: 10,
+    gap: 12,
+  },
+  actionButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 16,
+    paddingHorizontal: 24,
+    borderRadius: 12,
+    elevation: 2,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+  },
+  updateMileageButton: {
+    // Specific styles for update mileage button if needed
+  },
+  addSpecsButton: {
+    // Specific styles for add specs button if needed
+  },
+  actionButtonText: {
+    color: 'white',
+    fontSize: 16,
+    fontWeight: '600',
+  },
+  buttonIcon: {
+    marginRight: 8,
+  },
+  // Your Original Square Buttons (Service Records & Documents)
+  buttonsSection: {
     flexDirection: 'row',
     justifyContent: 'center',
     alignItems: 'center',
     paddingHorizontal: 16,
     paddingVertical: 12,
-    gap:50
+    gap: 50,
+    marginTop: 20,
   },
-  actionButton: {
+  squareActionButton: {
     width: 100,  // Fixed width
     height: 100, // Same as width for square
     flexDirection: 'column', // Stack icon and text vertically
@@ -297,12 +449,13 @@ const styles = StyleSheet.create({
     borderRadius: 12, // Rounded corners
     gap: 10, // Space between icon and text
   },
-  actionButtonText: {
+  squareActionButtonText: {
     color: 'white',
     fontSize: 15,
     fontWeight: '600',
     textAlign: 'center',
   },
+  // Common styles
   centered: {
     flex: 1,
     justifyContent: 'center',

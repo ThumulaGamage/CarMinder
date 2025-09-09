@@ -13,5 +13,5 @@
     "**/*.tsx",
     ".expo/types/**/*.ts",
     "expo-env.d.ts"
-, "app/tabs/vehicle/[id]/service.jsx", "app/tabs/vehicle/[id]/licence.jsx", "app/tabs/vehicle/[id]/vehical.jsx"  ]
+, "app/tabs/vehicle/[id]/Service Recordsapp/tabs/vehicle/[id]/Licence and Insurance.jsxence.jsx", "app/tabs/vehicle/[id]/Vehicle Details.jsx"  ]
 }

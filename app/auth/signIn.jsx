@@ -100,7 +100,7 @@ export default function SignIn() {
       <ThemedText style={[styles.title, { color: theme.primary }]}>Welcome Back</ThemedText>
       <ThemedText style={styles.subtitle}>Please sign in to continue</ThemedText>
 
-      {/* Debug info */}
+      {/* Debug info 
       <View style={styles.debugContainer}>
         <ThemedText style={styles.debugText}>
           Auth Status: {isAuthenticated ? '✅ Signed In' : '❌ Not Signed In'}
@@ -113,7 +113,7 @@ export default function SignIn() {
             User: {user.email}
           </ThemedText>
         )}
-      </View>
+      </View>*/}
 
       <ThemedTextInput
         placeholder="Email"

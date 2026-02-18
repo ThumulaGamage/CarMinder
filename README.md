@@ -1,50 +1,159 @@
-# Welcome to your Expo app 👋
+# 🚗 CarMinder -- Vehicle Maintenance Log App
 
-This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
+CarMinder is a cloud-based mobile application designed to help vehicle
+owners manage maintenance records, service schedules, and important
+documents.
 
-## Get started
+------------------------------------------------------------------------
 
-1. Install dependencies
+## 📌 Project Overview
 
-   ```bash
-   npm install
-   ```
+CarMinder simplifies vehicle maintenance by offering:
 
-2. Start the app
+-   Centralized service history management\
+-   Automated maintenance reminders\
+-   Secure cloud storage\
+-   Multi-vehicle support\
+-   Real-time synchronization
 
-   ```bash
-   npx expo start
-   ```
+This project was developed as part of the **CO3261 -- Cloud Computing**
+course.
 
-In the output, you'll find options to open the app in a
+------------------------------------------------------------------------
 
-- [development build](https://docs.expo.dev/develop/development-builds/introduction/)
-- [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
-- [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
-- [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
+## ✨ Features
 
-You can start developing by editing the files inside the **app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
+### 🚘 Vehicle Management
 
-## Get a fresh project
+-   Add and manage multiple vehicles
+-   Store detailed vehicle information
+-   Upload vehicle photos
 
-When you're ready, run:
+### 🛠️ Service Records
 
-```bash
-npm run reset-project
+-   Log maintenance activities
+-   Track mileage and service dates
+-   Categorize services
+
+### 🔔 Smart Notifications
+
+-   Time-based reminders
+-   Mileage-based alerts
+-   Document expiry alerts
+-   Overdue maintenance warnings
+
+### 📊 Analytics & Reports
+
+-   Maintenance trends
+-   Service frequency analysis
+-   Predictive insights
+
+### ☁️ Cloud Integration
+
+-   Real-time data sync
+-   Secure cloud storage
+-   Offline access with sync
+
+------------------------------------------------------------------------
+
+## 🏗️ System Architecture
+
+React Native → Firebase → Firestore
+
+Hybrid cloud model using Firebase and Supabase.
+
+------------------------------------------------------------------------
+
+## 🧰 Technology Stack
+
+### Frontend
+
+-   React Native
+-   Expo
+-   React Native Paper / Tailwind-RN
+
+### Backend & Cloud
+
+-   Firebase Authentication
+-   Firestore Database
+-   Firebase Cloud Functions
+-   Firebase Cloud Messaging
+-   Supabase Storage
+
+### Tools
+
+-   Visual Studio Code
+-   Git & GitHub
+-   Node.js & npm
+-   Android Studio
+
+------------------------------------------------------------------------
+
+## ⚙️ Installation & Setup
+
+### 1. Clone Repository
+
+``` bash
+git clone https://github.com/your-username/carminder.git
+cd carminder
 ```
 
-This command will move the starter code to the **app-example** directory and create a blank **app** directory where you can start developing.
+### 2. Install Dependencies
 
-## Learn more
+``` bash
+npm install
+```
 
-To learn more about developing your project with Expo, look at the following resources:
+### 3. Run Application
 
-- [Expo documentation](https://docs.expo.dev/): Learn fundamentals, or go into advanced topics with our [guides](https://docs.expo.dev/guides).
-- [Learn Expo tutorial](https://docs.expo.dev/tutorial/introduction/): Follow a step-by-step tutorial where you'll create a project that runs on Android, iOS, and the web.
+``` bash
+npx expo start
+```
 
-## Join the community
+------------------------------------------------------------------------
 
-Join our community of developers creating universal apps.
+## 🧪 Testing
 
-- [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
-- [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
+-   Unit Testing (Jest)
+-   Integration Testing
+-   UI Testing
+-   Performance Testing
+
+------------------------------------------------------------------------
+
+## 👥 Team Members (Group 11)
+
+-   22/ENG/003 -- A.P.G.C.L Wijesinghe\
+-   22/ENG/049 -- H.M.K.V Herath\
+-   22/ENG/092 -- M.G.T.D Gamage
+
+------------------------------------------------------------------------
+
+## ⚠️ Limitations
+
+-   Android only
+-   No web dashboard
+-   Basic analytics
+-   No IoT support
+
+------------------------------------------------------------------------
+
+## 🔮 Future Enhancements
+
+-   AI-powered predictions
+-   Web dashboard
+-   OBD-II integration
+-   Multi-language support
+-   Service booking
+
+------------------------------------------------------------------------
+
+## 📄 License
+
+Academic project under CO3261 -- Cloud Computing.
+
+------------------------------------------------------------------------
+
+## 📬 Contact
+
+Add your contact details here.
